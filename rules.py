@@ -50,8 +50,18 @@ def play_turn(map, cards, player):
 def deploy(map, player, armies):
     player.deploy(map, armies)
 
+def contienent_bonus(map, player):
+    bonuses = 0
+    for name, bonus in map.continents.items():
+        members = [territory for territory in map.territories if territory.continent == name]
+        if all(m.owner == player for m in members):
+            print("Bonus of {} for owning {}".format(bonus, name))
+            bonuses += bonus
+    return bonuses
+
 def calculate_troop_deployment(map, player):
-    return max(math.floor(map.count_territories(player) / TERRITORIES_PER_ARMY), MIN_DEPLOYMENT)
+    base_count = max(math.floor(map.count_territories(player) / TERRITORIES_PER_ARMY), MIN_DEPLOYMENT)
+    return base_count + contienent_bonus(map, player)
 
 def attacks(map, player):
     at_least_one_victory = False
