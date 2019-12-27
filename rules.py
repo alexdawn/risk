@@ -17,37 +17,40 @@ def summary(map):
 def play_game(map, cards, players):
     map.allocate_territories(players)
     turn = 1
+    first = True
     while len([p for p in players if p.in_game]) > 1:
         print("TURN {}".format(turn))
-        play_round(map, cards, players)
+        play_round(map, cards, players, first)
         print("End of TURN {}".format(turn))
         summary(map)
         #_ = input("Press Enter for next round")
         turn += 1
+        first = False
     winner = [p for p in players if p.in_game][0]
     print("Winner is {}".format(winner.name))
 
-def play_round(map, cards, players):
+def play_round(map, cards, players, first):
     for player in players:
         if player.in_game:
             print("{}'s turn".format(player.name))
-            play_turn(map, cards, player)
+            play_turn(map, cards, player, first)
             for check_player in players:
                 if not map.count_territories(check_player):
                     check_player.in_game = False
         if len([p for p in players if p.in_game]) == 1:
             break
 
-def play_turn(map, cards, player):
+def play_turn(map, cards, player, first_turn):
     armies =  calculate_troop_deployment(map, player)
     returns, bonus = player.check_cards(map, armies)
     if returns:
         cards.returns(returns)
     deploy(map, player, armies + bonus)
-    success = attacks(map, player)
-    if success:
-        player.take_card(draw_card(cards))
-    slide(map, player)
+    if not first_turn:
+        success = attacks(map, player)
+        if success:
+            player.take_card(draw_card(cards))
+        slide(map, player)
 
 
 def deploy(map, player, armies):
