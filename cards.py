@@ -1,9 +1,9 @@
 class Card_Deck:
-    SUITS = set(["Infantry", "Calvary", "Cannon"])
+    SUITS = ["Infantry", "Calvary", "Cannon"]
     def __init__(self, map):
         self.cards = set()
-        for t in map.territories:
-            self.cards.add(Card(t, "Infantry"))
+        for i, t in enumerate(map.territories):
+            self.cards.add(Card(t, Card_Deck.SUITS[i % len(Card_Deck.SUITS)]))
 
     def draw(self):
         return self.cards.pop()

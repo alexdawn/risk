@@ -9,17 +9,24 @@ class Player:
     def __repr__(self):
         return self.name
 
+    def remove_first_match(self, type):
+        for i in range(len(self.cards)):
+            card = self.cards[i]
+            if card.suit == type:
+                self.cards.remove(card)
+                return card
+
     def check_cards(self, map, armies):
         if (any(card.suit == "Infantry" for card in self.cards) and
             any(card.suit == "Cavalry" for card in self.cards) and
             any(card.suit == "Cannon" for card in self.cards)):
-            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 12
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cannon")], 12
         elif sum(1 for card in self.cards if card.suit == "Infantry") >= 3:
-            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 6
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Infantry"), self.remove_first_match("Infantry")], 6
         elif sum(1 for card in self.cards if card.suit == "Cavalry") >= 3:
-            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 8
+            return [self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry")], 8
         elif sum(1 for card in self.cards if card.suit == "Cannon") >= 3:
-            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 10
+            return [self.remove_first_match("Cannon"), self.remove_first_match("Cannon"), self.remove_first_match("Cannon")], 10
         else:
             return None, 0
     def deploy(self, map, armies):
