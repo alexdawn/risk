@@ -80,17 +80,27 @@ def attacks(map, player):
                 at_least_one_victory = True
     return at_least_one_victory
 
+def battle_results(ac, dc, attacker_wins, name):
+    prefix = "Attacker wins" if attacker_wins else "Defender holds"
+    print("{} {}, losses Attacker: {} Defender {}".format(prefix, name, dc, ac))
+
+
 def attack(map, player, territory_from, territory_to):
-    while player.attack_continue(map, territory_from, territory_to) and territory_from.armies > 1:
+    ac, dc = 0, 0
+    while player.attack_continue(map, territory_from, territory_to) and territory_from.armies > 1 and territory_to.armies > 0:
         commited_attackers = player.attack_commit(map, territory_from, territory_to)
         a, d = combat(commited_attackers, territory_to.armies)
-        print("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
+        ac += a
+        dc += d
+        # print("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
         map.remove_armies(territory_from, d)
         map.remove_armies(territory_to, a)
-        if territory_to.armies == 0:
-            map.conquer(player, territory_from, territory_to, max(player.attack_move(map, territory_from, territory_to), commited_attackers))
-            return True
-    return False
+    battle_results(ac, dc, territory_to.armies == 0, territory_to.name)
+    if territory_to.armies == 0:
+        map.conquer(player, territory_from, territory_to, max(player.attack_move(map, territory_from, territory_to), commited_attackers))
+        return True
+    else:
+        return False
 
 
 def combat(attackers, defenders):
