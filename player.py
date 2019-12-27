@@ -1,3 +1,4 @@
+import random
 import rules
 
 class Player:
@@ -5,36 +6,51 @@ class Player:
         self.name = name
         self.in_game = True
         self.cards = []
-    
+    def __repr__(self):
+        return self.name
+
+    def check_cards(self, map, armies):
+        if (any(card.suit == "Infantry" for card in self.cards) and
+            any(card.suit == "Cavalry" for card in self.cards) and
+            any(card.suit == "Cannon" for card in self.cards)):
+            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 12
+        elif sum(1 for card in self.cards if card.suit == "Infantry") >= 3:
+            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 6
+        elif sum(1 for card in self.cards if card.suit == "Cavalry") >= 3:
+            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 8
+        elif sum(1 for card in self.cards if card.suit == "Cannon") >= 3:
+            return [self.cards.pop(0), self.cards.pop(0), self.cards.pop(0)], 10
+        else:
+            return None, 0
     def deploy(self, map, armies):
         """The player deployment logic"""
-        for territory in map.territories:
-            if territory.owner == self:
-                map.add_armies(territory, armies)
-                break
+        own = [territory for territory in map.territories if territory.owner == self and any(n for n in map.get_neighbours(territory) if n.owner != self)]
+        map.add_armies(own[random.randint(0, len(own)) - 1], armies)
 
     def take_card(self, card):
         """Add card to the players hand"""
-        self.cards.extend(card)
+        self.cards.append(card)
 
     def attacks(self, map):
         """Declare list of attacks"""
         attacks = []
         for territory in map.territories:
-            if territory.owner == self:
+            if territory.owner is self and territory.armies > 1:
                 for neighbour in map.get_neighbours(territory):
-                    if neighbour.owner != self:
-                        attacks.extend(territory, neighbour)
-                        break
+                    if neighbour.owner is not self:
+                        attacks.append((territory, neighbour))
         return attacks
 
     def attack_continue(self, map, territory_from, territory_to):
         """Ask player if they wish to continue"""
-        return territory_from.armies > territory_to.armies and territory_from.armies > 1
+        return territory_from.armies > 1
 
     def attack_commit(self, map, territory_from, territory_to):
         """Ask player number of armies to commit to attack"""
         return min(territory_from.armies - 1, rules.MAX_ATTACK)
+
+    def attack_move(self, map, territory_from, territory_to):
+        return territory_from.armies - 1
 
     def attack_success(self, map, territory_from, territory_to):
         """Allow player to adapt plan"""

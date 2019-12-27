@@ -5,9 +5,8 @@ import cards
 
 def risk():
     map = board.make_map()
-    print(map)
     players = player.make_players(3)
-    rules.play_game(map, cards.Card_Deck(), players)
+    rules.play_game(map, cards.Card_Deck(map), players)
 
 if __name__ == '__main__':
     risk()

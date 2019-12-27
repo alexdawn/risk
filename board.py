@@ -9,8 +9,18 @@ class Map:
     def make_terrority(self, id, name, continent, connections):
         self.territories.append(Terrority(id, name, continent, connections))
 
+    def allocate_territories(self, players):
+        territories_to_be_allocated = set(self.territories)
+        while len(territories_to_be_allocated) > 0:
+            for player in players:
+                t = territories_to_be_allocated.pop()
+                t.set_armies(1)
+                t.owner = player
+                if len(territories_to_be_allocated) == 0:
+                    break
+
     def get_neighbours(self, territory):
-        return [self.territories[i] for i in territory.connections]
+        return [self.territories[i - 1] for i in territory.connections]
 
     def set_continent_army_value(self, name, value):
         self.continents[name] = value
@@ -18,7 +28,7 @@ class Map:
     def conquer(self, player, territory_from, territory_to, armies):
         print("{} taken over by {}".format(territory_to.name, player.name))
         territory_to.set_owner(player)
-        self.move_armies(territory_to, territory_to, armies)
+        self.move_armies(territory_from, territory_to, armies)
 
     def add_armies(self, territory, armies):
         print("Add {} armies to {}".format(armies, territory.name))
@@ -33,7 +43,7 @@ class Map:
         territory.set_armies(max(territory.armies - armies, 0))
 
     def count_territories(self, player):
-        return count(t for t in self.territories if t.owner == player)
+        return sum(1 for t in self.territories if t.owner == player)
 
     def count_continents(self, player):
         bonus = 0
@@ -50,9 +60,11 @@ class Terrority:
         self.connections = connections
         self.owner = None
         self.armies = 0
-    def set_owner(player):
+    def __repr__(self):
+        return self.name
+    def set_owner(self, player):
         self.owner = player
-    def set_armies(armies):
+    def set_armies(self, armies):
         assert armies >= 0
         self.armies = armies
 
