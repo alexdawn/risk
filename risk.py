@@ -9,4 +9,5 @@ def risk():
     rules.play_game(map, cards.Card_Deck(map), players)
 
 if __name__ == '__main__':
-    risk()
+    for i in range(10):
+        risk()

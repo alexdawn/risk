@@ -22,18 +22,21 @@ def play_game(map, cards, players):
         play_round(map, cards, players)
         print("End of TURN {}".format(turn))
         summary(map)
-        _ = input("Press Enter for next round")
+        #_ = input("Press Enter for next round")
         turn += 1
     winner = [p for p in players if p.in_game][0]
     print("Winner is {}".format(winner.name))
 
 def play_round(map, cards, players):
     for player in players:
-        if map.count_territories(player):
+        if player.in_game:
             print("{}'s turn".format(player.name))
             play_turn(map, cards, player)
-        else:
-            player.in_game = False
+            for check_player in players:
+                if not map.count_territories(check_player):
+                    check_player.in_game = False
+        if len([p for p in players if p.in_game]) == 1:
+            break
 
 def play_turn(map, cards, player):
     armies =  calculate_troop_deployment(map, player)
