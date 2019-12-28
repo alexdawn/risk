@@ -85,13 +85,18 @@ def calculate_troop_deployment(map, player):
 
 def attacks(map, player, options):
     at_least_one_victory = False
-    for territory_from, territory_to in player.attacks(map)[:options['attack_limit']]:
+    attack_plan = player.attacks(map)[:options['attack_limit']]
+    if len(attack_plan) == 0:
+        print("No attacks made by {}".format(player))
+    for territory_from, territory_to in attack_plan:
         if (territory_from.owner == player and
            territory_to.owner != player and
            territory_from.armies > 1):
             result = attack(map, player, options, territory_from, territory_to)
             if result:
                 at_least_one_victory = True
+        else:
+            print("Invalid target!")
     return at_least_one_victory
 
 def battle_results(ac, dc, attacker_wins, name):
