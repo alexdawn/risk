@@ -3,9 +3,6 @@ import rules
 from board import Terrority
 from player import Player
 
-def safe_list_get(list, index, default):
-    return list[index] if index < len(list) else default
-
 class Human(Player):
     def __init__(self, name):
         super().__init__(name)
@@ -60,6 +57,58 @@ class Human(Player):
         armies = input("How many armies do you wish to move in of {} avaiable?".format(territory_from.armies - 1))
         return int(armies)
 
+class Passive(Player):
+    def __init__(self, name):
+        super().__init__(name)
+    def __repr__(self):
+        return super().__repr__()
+
+    def remove_first_match(self, type):
+        for i in range(len(self.cards)):
+            card = self.cards[i]
+            if card.suit == type:
+                self.cards.remove(card)
+                return card
+
+    def check_cards(self, map, armies):
+        if (any(card.suit == "Infantry" for card in self.cards) and
+            any(card.suit == "Cavalry" for card in self.cards) and
+            any(card.suit == "Cannon" for card in self.cards)):
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cannon")], 12
+        elif sum(1 for card in self.cards if card.suit == "Infantry") >= 3:
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Infantry"), self.remove_first_match("Infantry")], 6
+        elif sum(1 for card in self.cards if card.suit == "Cavalry") >= 3:
+            return [self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry")], 8
+        elif sum(1 for card in self.cards if card.suit == "Cannon") >= 3:
+            return [self.remove_first_match("Cannon"), self.remove_first_match("Cannon"), self.remove_first_match("Cannon")], 10
+        else:
+            return None, 0
+    
+    def deploy(self, map, armies):
+        """passive deployts to the first territory with the least troops"""
+        own = sorted((
+            territory for territory in map.territories if territory.owner == self),
+            key=lambda t: t.id + len(map.territories) * t.armies)
+        map.add_armies(own[0], armies)
+
+    def take_card(self, card):
+        """Add card to the players hand"""
+        self.cards.append(card)
+
+    def attacks(self, map):
+        """Passive does not attack"""
+        return []
+
+    def attack_continue(self, map, territory_from, territory_to):
+        """Ask player if they wish to continue"""
+        raise NotImplementedError()
+
+    def attack_commit(self, map, territory_from, territory_to):
+        """Ask player number of armies to commit to attack"""
+        raise NotImplementedError()
+
+    def attack_move(self, map, territory_from, territory_to):
+        raise NotImplementedError()
 
 class Standard(Player):
     def __init__(self, name):
@@ -123,6 +172,6 @@ def make_players(options):
     assert options['players'] >= 2
     players = []
     # for i in range(options['players']):
-    players.append(Human("Player {}".format(1)))
+    players.append(Passive("Player {}".format(1)))
     players.append(Standard("ai {}".format(2)))
     return players
