@@ -14,46 +14,58 @@ def summary(map):
     print(dict(ownership))
 
 
-def play_game(map, cards, players):
+def play_game(map, cards, players, options):
     map.allocate_territories(players)
     turn = 1
-    first = True
+    first = options['extra_start_deployment']
     while len([p for p in players if p.in_game]) > 1:
         print("TURN {}".format(turn))
-        play_round(map, cards, players, first)
+        play_round(map, cards, players, first, options)
         print("End of TURN {}".format(turn))
         summary(map)
-        #_ = input("Press Enter for next round")
         turn += 1
         first = False
     winner = [p for p in players if p.in_game][0]
     print("Winner is {}".format(winner.name))
 
-def play_round(map, cards, players, first):
+def check_players(map, players):
+    for check_player in players:
+        check_player.in_game = bool(map.count_territories(check_player))
+
+def active_players(players):
+    len([p for p in players if p.in_game])
+
+def play_round(map, cards, players, first, options):
     for player in players:
         if player.in_game:
             print("{}'s turn".format(player.name))
-            play_turn(map, cards, player, first)
-            for check_player in players:
-                if not map.count_territories(check_player):
-                    check_player.in_game = False
-        if len([p for p in players if p.in_game]) == 1:
+            play_turn(map, cards, player, first, options)
+            check_players(map, players)
+        if active_players(players) == 1:
             break
 
-def play_turn(map, cards, player, first_turn):
+def play_turn(map, cards, player, first_turn, options):
     base_armies =  calculate_troop_deployment(map, player)
     contienent_bonus = calculate_contienent_bonus(map, player)
-    returns, card_bonus = player.check_cards(map, base_armies)
+    if options['bonus_cards'] == 'yes':
+        returns, card_bonus = player.check_cards(map, base_armies)
+        if returns:
+            cards.returns(returns)
+    elif options['bonus_cards'] == 'fixed':
+        card_bonus = 2 if player.success else 0
+    elif options['bonus_cards'] == 'none':
+        card_bonus = 0
+    else:
+        raise ValueError("Invalid setting")
     armies = base_armies + contienent_bonus + card_bonus
-    if returns:
-        cards.returns(returns)
     print("{} gets {} (+{}+{} bonus) armies this turn".format(player.name, base_armies, contienent_bonus, card_bonus))
     deploy(map, player, armies)
     if not first_turn:
-        success = attacks(map, player)
-        if success:
+        player.success = attacks(map, player, options)
+        if player.success and options['bonus_cards'] == 'yes':
             player.take_card(draw_card(cards))
-        slide(map, player)
+        if options['end_of_turn_slide']:
+            slide(map, player)
 
 
 def deploy(map, player, armies):
@@ -71,13 +83,13 @@ def calculate_contienent_bonus(map, player):
 def calculate_troop_deployment(map, player):
     return max(math.floor(map.count_territories(player) / TERRITORIES_PER_ARMY), MIN_DEPLOYMENT)
 
-def attacks(map, player):
+def attacks(map, player, options):
     at_least_one_victory = False
-    for territory_from, territory_to in player.attacks(map):
+    for territory_from, territory_to in player.attacks(map)[:options['attack_limit']]:
         if (territory_from.owner == player and
            territory_to.owner != player and
            territory_from.armies > 1):
-            result = attack(map, player, territory_from, territory_to)
+            result = attack(map, player, options, territory_from, territory_to)
             if result:
                 at_least_one_victory = True
     return at_least_one_victory
@@ -87,11 +99,14 @@ def battle_results(ac, dc, attacker_wins, name):
     print("{} {}, losses Attacker: {} Defender {}".format(prefix, name, dc, ac))
 
 
-def attack(map, player, territory_from, territory_to):
+def attack(map, player, options, territory_from, territory_to):
     ac, dc = 0, 0
-    while player.attack_continue(map, territory_from, territory_to) and territory_from.armies > 1 and territory_to.armies > 0:
-        commited_attackers = player.attack_commit(map, territory_from, territory_to)
-        a, d = combat(commited_attackers, territory_to.armies)
+    commited_attackers = player.attack_commit(map, territory_from, territory_to)
+    assert commited_attackers < territory_from.armies
+    while ((True if options['death_or_glory'] else player.attack_continue(map, territory_from, territory_to))
+           and territory_from.armies > 1 
+           and territory_to.armies > 0):
+        a, d = combat(commited_attackers, territory_to.armies, options)
         ac += a
         dc += d
         # print("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
@@ -99,21 +114,27 @@ def attack(map, player, territory_from, territory_to):
         map.remove_armies(territory_to, a)
     battle_results(ac, dc, territory_to.armies == 0, territory_to.name)
     if territory_to.armies == 0:
-        map.conquer(player, territory_from, territory_to, max(player.attack_move(map, territory_from, territory_to), commited_attackers))
+        invaders = min(commited_attackers, territory_from.armies)
+        map.conquer(player, territory_from, territory_to, max(player.attack_move(map, territory_from, territory_to), invaders))
         return True
     else:
         return False
 
 
-def combat(attackers, defenders):
-    attack = dice.roll_dice(min(attackers, MAX_ATTACK))
-    defend = dice.roll_dice(min(defenders, MAX_DEFENSE))
-    attacker_kills, defender_kills = 0, 0
-    for a, d in zip(sorted(attack, reverse=True), sorted(defend, reverse=True)):
-        if a > d:
-            attacker_kills += 1
-        else:
-            defender_kills += 1
+def combat(attackers, defenders, options):
+    assert attackers > 0
+    assert defenders > 0
+    if options['stocasticity']:
+        attack = dice.roll_dice(min(attackers, MAX_ATTACK))
+        defend = dice.roll_dice(min(defenders, MAX_DEFENSE))
+        attacker_kills, defender_kills = 0, 0
+        for a, d in zip(sorted(attack, reverse=True), sorted(defend, reverse=True)):
+            if a > d:
+                attacker_kills += 1
+            else:
+                defender_kills += 1
+    else:
+        attacker_kills, defender_kills = min(defenders, attackers), min(defenders, attackers)
     return attacker_kills, defender_kills
 
 

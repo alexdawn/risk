@@ -4,7 +4,8 @@ class Map:
         self.continents = {}
 
     def __repr__(self):
-        return "\n".join("{}: {} armies owned by {}".format(territory.name, territory.armies, territory.owner.name if territory.owner else "N/A") for territory in self.territories)
+        return "\n".join("{}: {} armies owned by {}".format(
+            territory.name, territory.armies, territory.owner.name if territory.owner else "N/A") for territory in self.territories)
 
     def make_terrority(self, id, name, continent, connections):
         self.territories.append(Terrority(id, name, continent, connections))

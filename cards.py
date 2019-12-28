@@ -4,6 +4,8 @@ class Card_Deck:
         self.cards = set()
         for i, t in enumerate(map.territories):
             self.cards.add(Card(t, Card_Deck.SUITS[i % len(Card_Deck.SUITS)]))
+        for i in range(0):
+            self.cards.add(Card(None, "Wildcard"))
 
     def draw(self):
         return self.cards.pop()
