@@ -1,19 +1,31 @@
 import logging
+import copy
 
 class Map:
     def __init__(self):
         self.territories = []
+        self.territories_by_name = {}
         self.continents = {}
+        self.players = set()
 
     def __repr__(self):
         return "\n".join("{}: {} armies owned by {}".format(
             territory.name, territory.armies, territory.owner.name if territory.owner else "N/A") for territory in self.territories)
 
+    def make_copy(self):
+        return copy.deepcopy(self)
+
     def make_terrority(self, id, name, continent, connections):
-        self.territories.append(Terrority(id, name, continent, connections))
+        territory = Terrority(id, name, continent, connections)
+        self.territories.append(territory)
+        self.territories_by_name[name] = territory
+
+    def get_territory(self, name):
+        return self.territories_by_name[name]
 
     def allocate_territories(self, players):
         territories_to_be_allocated = set(self.territories)
+        self.players = set(players)
         while len(territories_to_be_allocated) > 0:
             for player in players:
                 t = territories_to_be_allocated.pop()
@@ -56,7 +68,7 @@ class Map:
 
     def calculate_contienent(self, player, name):
         members = [territory for territory in self.territories if territory.continent == name]
-        if all(m.owner == player for m in members):
+        if all(m.owner.name == player.name for m in members):
             return self.continents[name]
         else:
             return 0

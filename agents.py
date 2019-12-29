@@ -2,6 +2,7 @@ import random
 import logging
 
 import rules
+import heuristic
 from board import Terrority
 from player import Player
 
@@ -198,7 +199,7 @@ class Aggresive(Player):
             return None, 0
     
     def deploy(self, map, armies):
-        """Aggressive blobs as much as possible"""
+        """Aggressive blobs as much as possible, in territories with a border"""
         own = sorted((
             territory for territory in map.territories if territory.owner == self and any(n.owner != self for n in map.get_neighbours(territory))),
             key=lambda t: t.id + len(map.territories) * t.armies, reverse=True)
@@ -226,10 +227,132 @@ class Aggresive(Player):
     def attack_move(self, map, territory_from, territory_to):
         return territory_from.armies - 1
 
+
+class Pacifist(Player):
+    """Plays to minimise combat while still getting bonus armies"""
+    def __init__(self, name):
+        super().__init__(name)
+    def __repr__(self):
+        return super().__repr__()
+
+    def remove_first_match(self, type):
+        for i in range(len(self.cards)):
+            card = self.cards[i]
+            if card.suit == type:
+                self.cards.remove(card)
+                return card
+
+    def check_cards(self, map, armies):
+        if (any(card.suit == "Infantry" for card in self.cards) and
+            any(card.suit == "Cavalry" for card in self.cards) and
+            any(card.suit == "Cannon" for card in self.cards)):
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cannon")], 12
+        elif sum(1 for card in self.cards if card.suit == "Infantry") >= 3:
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Infantry"), self.remove_first_match("Infantry")], 6
+        elif sum(1 for card in self.cards if card.suit == "Cavalry") >= 3:
+            return [self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry")], 8
+        elif sum(1 for card in self.cards if card.suit == "Cannon") >= 3:
+            return [self.remove_first_match("Cannon"), self.remove_first_match("Cannon"), self.remove_first_match("Cannon")], 10
+        else:
+            return None, 0
+    
+    def deploy(self, map, armies):
+        """Passive deployts to the first territory with the least troops"""
+        own = sorted((
+            territory for territory in map.territories if territory.owner == self),
+            key=lambda t: t.id + len(map.territories) * t.armies)
+        map.add_armies(own[0], armies)
+
+    def take_card(self, card):
+        """Add card to the players hand"""
+        self.cards.append(card)
+
+    def attacks(self, map):
+        """Attacks 1 target with least armies"""
+        options = [(territory, neighbour) for territory in map.territories if territory.owner is self and territory.armies > 1
+            for neighbour in map.get_neighbours(territory) if neighbour.owner is not self and territory.armies - 1 > neighbour.armies]
+        attacks = sorted(options, key=lambda path: path[1].armies)
+        return attacks[:1] if attacks else []
+
+    def attack_continue(self, map, territory_from, territory_to):
+        """Ask player if they wish to continue"""
+        return territory_from.armies > 1
+
+    def attack_commit(self, map, territory_from, territory_to):
+        """Ask player number of armies to commit to attack"""
+        return territory_from.armies - 1
+
+    def attack_move(self, map, territory_from, territory_to):
+        return territory_from.armies - 1
+
+class Greedy(Player):
+    """Plays the imediate best move"""
+    def __init__(self, name):
+        super().__init__(name)
+    def __repr__(self):
+        return super().__repr__()
+
+    def remove_first_match(self, type):
+        for i in range(len(self.cards)):
+            card = self.cards[i]
+            if card.suit == type:
+                self.cards.remove(card)
+                return card
+
+    def check_cards(self, map, armies):
+        if (any(card.suit == "Infantry" for card in self.cards) and
+            any(card.suit == "Cavalry" for card in self.cards) and
+            any(card.suit == "Cannon" for card in self.cards)):
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cannon")], 12
+        elif sum(1 for card in self.cards if card.suit == "Infantry") >= 3:
+            return [self.remove_first_match("Infantry"), self.remove_first_match("Infantry"), self.remove_first_match("Infantry")], 6
+        elif sum(1 for card in self.cards if card.suit == "Cavalry") >= 3:
+            return [self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry"), self.remove_first_match("Cavalry")], 8
+        elif sum(1 for card in self.cards if card.suit == "Cannon") >= 3:
+            return [self.remove_first_match("Cannon"), self.remove_first_match("Cannon"), self.remove_first_match("Cannon")], 10
+        else:
+            return None, 0
+
+    def _trial_deployment(self, map, armies):
+        def test(territory):
+            sandbox = map.make_copy()
+            sandbox.add_armies(sandbox.get_territory(territory.name), armies)
+            return heuristic.heuristic(sandbox, self)
+        return test
+    
+    def deploy(self, map, armies):
+        """Deploy to minimise heuristic"""
+        own = sorted((
+            territory for territory in map.territories if territory.owner == self),
+            key=self._trial_deployment(map, armies))
+        map.add_armies(own[0], armies)
+
+    def take_card(self, card):
+        """Add card to the players hand"""
+        self.cards.append(card)
+
+    def attacks(self, map):
+        """Attacks 1 target with least armies"""
+        options = [(territory, neighbour) for territory in map.territories if territory.owner is self and territory.armies > 1
+            for neighbour in map.get_neighbours(territory) if neighbour.owner is not self and territory.armies - 1 > neighbour.armies]
+        attacks = sorted(options, key=lambda path: path[1].armies)
+        return attacks[:1] if attacks else []
+
+    def attack_continue(self, map, territory_from, territory_to):
+        """Ask player if they wish to continue"""
+        return territory_from.armies > 1
+
+    def attack_commit(self, map, territory_from, territory_to):
+        """Ask player number of armies to commit to attack"""
+        return territory_from.armies - 1
+
+    def attack_move(self, map, territory_from, territory_to):
+        return territory_from.armies - 1
+
 def make_players(options):
     assert options['players'] >= 2
     players = []
     # for i in range(options['players']):
-    players.append(Standard("ai {}".format(1)))
-    players.append(Aggresive("ai {}".format(2)))
+    players.append(Aggresive("Aggresive"))
+    players.append(Greedy("Greedy"))
     return players

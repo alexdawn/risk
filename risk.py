@@ -1,9 +1,12 @@
 from collections import defaultdict
+import logging
 
 import board
 import agents
 import rules
 import cards
+
+logging.getLogger().setLevel(logging.WARNING)
 
 options = {
     'players': 2,
@@ -28,10 +31,11 @@ def risk(options):
 
 if __name__ == '__main__':
     tournament_score = defaultdict(lambda : {'wins': 0, 'avg_turns': 0})
-    for i in range(100):
+    for i in range(10):
         print("game {}".format(i))
         winner, turns = risk(options)
-        tournament_score[winner.name]['wins'] += 1
-        tournament_score[winner.name]['avg_turns'] = (
-            (tournament_score[winner.name]['wins'] -  1) * tournament_score[winner.name]['avg_turns'] + turns) / tournament_score[winner.name]['wins']
+        winner = winner if type(winner) == str else winner.name
+        tournament_score[winner]['wins'] += 1
+        tournament_score[winner]['avg_turns'] = (
+            (tournament_score[winner]['wins'] -  1) * tournament_score[winner]['avg_turns'] + turns) / tournament_score[winner]['wins']
     print(tournament_score)

@@ -20,15 +20,21 @@ def play_game(map, cards, players, options):
     map.allocate_territories(players)
     turn = 1
     first = options['extra_start_deployment']
-    while len([p for p in players if p.in_game]) > 1:
+    while len([p for p in players if p.in_game]) > 1 and turn < 1000:
         logging.info("TURN {}".format(turn))
         play_round(map, cards, players, first, options)
         logging.info("End of TURN {}".format(turn))
         summary(map)
         turn += 1
         first = False
-    winner = [p for p in players if p.in_game][0]
-    logging.info("Winner is {}".format(winner.name))
+        #print(map)
+        #_ = input("Next Round")
+    if turn < 1000:
+        winner = [p for p in players if p.in_game][0]
+        logging.info("Winner is {}".format(winner.name))
+    else:
+        winner = 'Draw'
+        turn = 1000
     return winner, turn
 
 def check_players(map, players):
