@@ -1,3 +1,5 @@
+import logging
+
 class Map:
     def __init__(self):
         self.territories = []
@@ -27,16 +29,16 @@ class Map:
         self.continents[name] = value
 
     def conquer(self, player, territory_from, territory_to, armies):
-        print("{} taken over by {}".format(territory_to.name, player.name))
+        logging.info("{} taken over by {}".format(territory_to.name, player.name))
         territory_to.set_owner(player)
         self.move_armies(territory_from, territory_to, armies)
 
     def add_armies(self, territory, armies):
-        print("Add {} armies to {}".format(armies, territory.name))
+        logging.info("Add {} armies to {}".format(armies, territory.name))
         territory.set_armies(territory.armies + armies)
 
     def move_armies(self, territory_from, territory_to, armies):
-        print("{} armies moved from {} to {}".format(armies, territory_from.name, territory_to.name))
+        logging.info("{} armies moved from {} to {}".format(armies, territory_from.name, territory_to.name))
         territory_to.set_armies(territory_to.armies + armies)
         territory_from.set_armies(territory_from.armies - armies)        
 
@@ -48,10 +50,16 @@ class Map:
 
     def count_continents(self, player):
         bonus = 0
-        for continent_name, value in self.continents.items():
-            if all(t.owner == player for t in self.territories if t.continent == continent_name):
-                bonus += value
+        for continent_name in self.continents.keys():
+            bonus += self.calculate_contienent(player, continent_name)
         return bonus
+
+    def calculate_contienent(self, player, name):
+        members = [territory for territory in self.territories if territory.continent == name]
+        if all(m.owner == player for m in members):
+            return self.continents[name]
+        else:
+            return 0
 
 class Terrority:
     def __init__(self, id, name, continent, connections):

@@ -1,5 +1,7 @@
 import math
+import logging
 from collections import defaultdict
+
 import dice
 
 TERRITORIES_PER_ARMY = 3
@@ -11,7 +13,7 @@ def summary(map):
     ownership = defaultdict(lambda :0)
     for t in map.territories:
         ownership[t.owner] += 1
-    print(dict(ownership))
+    logging.info(dict(ownership))
 
 
 def play_game(map, cards, players, options):
@@ -19,14 +21,15 @@ def play_game(map, cards, players, options):
     turn = 1
     first = options['extra_start_deployment']
     while len([p for p in players if p.in_game]) > 1:
-        print("TURN {}".format(turn))
+        logging.info("TURN {}".format(turn))
         play_round(map, cards, players, first, options)
-        print("End of TURN {}".format(turn))
+        logging.info("End of TURN {}".format(turn))
         summary(map)
         turn += 1
         first = False
     winner = [p for p in players if p.in_game][0]
-    print("Winner is {}".format(winner.name))
+    logging.info("Winner is {}".format(winner.name))
+    return winner, turn
 
 def check_players(map, players):
     for check_player in players:
@@ -38,7 +41,7 @@ def active_players(players):
 def play_round(map, cards, players, first, options):
     for player in players:
         if player.in_game:
-            print("{}'s turn".format(player.name))
+            logging.info("{}'s turn".format(player.name))
             play_turn(map, cards, player, first, options)
             check_players(map, players)
         if active_players(players) == 1:
@@ -58,7 +61,7 @@ def play_turn(map, cards, player, first_turn, options):
     else:
         raise ValueError("Invalid setting")
     armies = base_armies + contienent_bonus + card_bonus
-    print("{} gets {} (+{}+{} bonus) armies this turn".format(player.name, base_armies, contienent_bonus, card_bonus))
+    logging.info("{} gets {} (+{}+{} bonus) armies this turn".format(player.name, base_armies, contienent_bonus, card_bonus))
     deploy(map, player, armies)
     if not first_turn:
         player.success = attacks(map, player, options)
@@ -72,13 +75,7 @@ def deploy(map, player, armies):
     player.deploy(map, armies)
 
 def calculate_contienent_bonus(map, player):
-    bonuses = 0
-    for name, bonus in map.continents.items():
-        members = [territory for territory in map.territories if territory.continent == name]
-        if all(m.owner == player for m in members):
-            # print("Bonus of {} for owning {}".format(bonus, name))
-            bonuses += bonus
-    return bonuses
+    return map.count_continents(player)
 
 def calculate_troop_deployment(map, player):
     return max(math.floor(map.count_territories(player) / TERRITORIES_PER_ARMY), MIN_DEPLOYMENT)
@@ -87,7 +84,7 @@ def attacks(map, player, options):
     at_least_one_victory = False
     attack_plan = player.attacks(map)[:options['attack_limit']]
     if len(attack_plan) == 0:
-        print("No attacks made by {}".format(player))
+        logging.info("No attacks made by {}".format(player))
     for territory_from, territory_to in attack_plan:
         if (territory_from.owner == player and
            territory_to.owner != player and
@@ -96,12 +93,12 @@ def attacks(map, player, options):
             if result:
                 at_least_one_victory = True
         else:
-            print("Invalid target!")
+            logging.info("Invalid target!")
     return at_least_one_victory
 
 def battle_results(ac, dc, attacker_wins, name):
     prefix = "Attacker wins" if attacker_wins else "Defender holds"
-    print("{} {}, losses Attacker: {} Defender {}".format(prefix, name, dc, ac))
+    logging.info("{} {}, losses Attacker: {} Defender {}".format(prefix, name, dc, ac))
 
 
 def attack(map, player, options, territory_from, territory_to):
@@ -114,7 +111,7 @@ def attack(map, player, options, territory_from, territory_to):
         a, d = combat(commited_attackers, territory_to.armies, options)
         ac += a
         dc += d
-        # print("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
+        # logging.info("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
         map.remove_armies(territory_from, d)
         map.remove_armies(territory_to, a)
     battle_results(ac, dc, territory_to.armies == 0, territory_to.name)
