@@ -10,7 +10,7 @@ MAX_ATTACK = 3
 MAX_DEFENSE = 2
 
 def summary(map):
-    ownership = defaultdict(lambda :0)
+    ownership = defaultdict(lambda: 0)
     for t in map.territories:
         ownership[t.owner] += 1
     logging.info(dict(ownership))
@@ -27,9 +27,7 @@ def play_game(map, cards, players, options):
         summary(map)
         turn += 1
         first = False
-        #print(map)
-        #_ = input("Next Round")
-    if turn < 1000:
+    if turn < 1000:  # stop game going on forever
         winner = [p for p in players if p.in_game][0]
         logging.info("Winner is {}".format(winner.name))
     else:
@@ -54,7 +52,7 @@ def play_round(map, cards, players, first, options):
             break
 
 def play_turn(map, cards, player, first_turn, options):
-    base_armies =  calculate_troop_deployment(map, player)
+    base_armies = calculate_troop_deployment(map, player)
     contienent_bonus = calculate_contienent_bonus(map, player)
     if options['bonus_cards'] == 'yes':
         returns, card_bonus = player.check_cards(map, base_armies)
@@ -67,7 +65,8 @@ def play_turn(map, cards, player, first_turn, options):
     else:
         raise ValueError("Invalid setting")
     armies = base_armies + contienent_bonus + card_bonus
-    logging.info("{} gets {} (+{}+{} bonus) armies this turn".format(player.name, base_armies, contienent_bonus, card_bonus))
+    logging.info("{} gets {} (+{}+{} bonus) armies this turn"
+                 .format(player.name, base_armies, contienent_bonus, card_bonus))
     deploy(map, player, armies)
     if not first_turn:
         player.success = attacks(map, player, options)
@@ -88,7 +87,7 @@ def calculate_troop_deployment(map, player):
 
 def attacks(map, player, options):
     at_least_one_victory = False
-    attack_plan = player.attacks(map)[:options['attack_limit']]
+    attack_plan = player.attacks(map, options)[:options['attack_limit']]
     if len(attack_plan) == 0:
         logging.info("No attacks made by {}".format(player))
     for territory_from, territory_to in attack_plan:
@@ -111,19 +110,22 @@ def attack(map, player, options, territory_from, territory_to):
     ac, dc = 0, 0
     commited_attackers = player.attack_commit(map, territory_from, territory_to)
     assert commited_attackers < territory_from.armies
-    while ((True if options['death_or_glory'] else player.attack_continue(map, territory_from, territory_to))
-           and territory_from.armies > 1 
+    while ((True if options['death_or_glory']
+           else player.attack_continue(map, territory_from, territory_to))
+           and territory_from.armies > 1
            and territory_to.armies > 0):
         a, d = combat(commited_attackers, territory_to.armies, options)
         ac += a
         dc += d
-        # logging.info("Combat in {} attacker loses {} and defender loses {}".format(territory_to, d, a))
+        logging.info("Combat in {} attacker loses {} and defender loses {}"
+                     .format(territory_to, d, a))
         map.remove_armies(territory_from, d)
         map.remove_armies(territory_to, a)
     battle_results(ac, dc, territory_to.armies == 0, territory_to.name)
     if territory_to.armies == 0:
         invaders = min(commited_attackers, territory_from.armies)
-        map.conquer(player, territory_from, territory_to, max(player.attack_move(map, territory_from, territory_to), invaders))
+        map.conquer(player, territory_from, territory_to,
+                    max(player.attack_move(map, territory_from, territory_to), invaders))
         return True
     else:
         return False

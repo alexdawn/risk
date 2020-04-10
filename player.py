@@ -1,9 +1,11 @@
 class Player:
-    def __init__(self, name):
+    def __init__(self, index, name):
+        self.index = index
         self.name = name
         self.in_game = True
         self.cards = []
         self.success = False
+
     def __repr__(self):
         return self.name
 
@@ -13,7 +15,7 @@ class Player:
     def check_cards(self, map, armies):
         """Check cards and hand in some if desired"""
         raise NotImplementedError()
-    
+
     def deploy(self, map, armies):
         """The player deployment logic"""
         raise NotImplementedError()

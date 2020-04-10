@@ -1,5 +1,7 @@
 import logging
 import copy
+from graphviz import Graph
+
 
 class Map:
     def __init__(self):
@@ -10,10 +12,24 @@ class Map:
 
     def __repr__(self):
         return "\n".join("{}: {} armies owned by {}".format(
-            territory.name, territory.armies, territory.owner.name if territory.owner else "N/A") for territory in self.territories)
+            territory.name, territory.armies, territory.owner.name if territory.owner else "N/A")
+            for territory in self.territories)
 
     def make_copy(self):
         return copy.deepcopy(self)
+
+    def make_graph(self):
+        g = Graph('Map', filename='world.gv', engine='dot')
+        continent_graphs = {
+            n: g.subgraph(name='cluster_{}'.format(n))
+            for n in self.continents.keys()}
+        for t in self.territories:
+            with continent_graphs[t.continent] as c:
+                c.node(t.name)
+            for i in t.connections:
+                g.edge(t.name, self.territories[i - 1].name)
+        g.format = 'png'
+        g.render(view=True)
 
     def make_terrority(self, id, name, continent, connections):
         territory = Terrority(id, name, continent, connections)
@@ -50,9 +66,10 @@ class Map:
         territory.set_armies(territory.armies + armies)
 
     def move_armies(self, territory_from, territory_to, armies):
-        logging.info("{} armies moved from {} to {}".format(armies, territory_from.name, territory_to.name))
+        logging.info("{} armies moved from {} to {}".format(
+            armies, territory_from.name, territory_to.name))
         territory_to.set_armies(territory_to.armies + armies)
-        territory_from.set_armies(territory_from.armies - armies)        
+        territory_from.set_armies(territory_from.armies - armies)
 
     def remove_armies(self, territory, armies):
         territory.set_armies(max(territory.armies - armies, 0))
@@ -81,10 +98,13 @@ class Terrority:
         self.connections = connections
         self.owner = None
         self.armies = 0
+
     def __repr__(self):
         return self.name
+
     def set_owner(self, player):
         self.owner = player
+
     def set_armies(self, armies):
         assert armies >= 0
         self.armies = armies
@@ -108,7 +128,7 @@ def make_map():
     map.make_terrority(11, 'Peru', 'South America', [10, 12, 13])
     map.make_terrority(12, 'Brazil', 'South America', [10, 11, 13, 21])
     map.make_terrority(13, 'Argentina', 'South America', [11, 12])
-    
+
     map.set_continent_army_value('Europe', 5)
     map.make_terrority(14, 'Iceland', 'Europe', [3, 15, 16])
     map.make_terrority(15, 'Great Britian', 'Europe', [14, 16, 17, 18])
@@ -145,4 +165,5 @@ def make_map():
     map.make_terrority(40, 'New Guinea', 'Oceania', [39, 41, 42])
     map.make_terrority(41, 'Western Australia', 'Oceania', [39, 40, 42])
     map.make_terrority(42, 'Eastern Australia', 'Oceania', [40, 41])
+    map.make_graph()
     return map
