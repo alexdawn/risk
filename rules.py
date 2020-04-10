@@ -1,6 +1,7 @@
 import math
 import logging
 from collections import defaultdict
+from typing import List, Dict, Any
 
 import dice
 
@@ -10,19 +11,23 @@ MAX_ATTACK = 3
 MAX_DEFENSE = 2
 
 def summary(map):
+    """Log how many territories each player has"""
     ownership = defaultdict(lambda: 0)
     for t in map.territories:
         ownership[t.owner] += 1
     logging.info(dict(ownership))
 
 
-def play_game(map, cards, players, options):
+def play_game(
+        name: str,
+        map,
+        cards, players: List[Any], options: Dict[str, Any]):
     map.allocate_territories(players)
     turn = 1
     first = options['extra_start_deployment']
     while len([p for p in players if p.in_game]) > 1 and turn < 1000:
         logging.info("TURN {}".format(turn))
-        play_round(map, cards, players, first, options)
+        play_round(map, cards, players, first, name, turn, options)
         logging.info("End of TURN {}".format(turn))
         summary(map)
         turn += 1
@@ -36,16 +41,20 @@ def play_game(map, cards, players, options):
     return winner, turn
 
 def check_players(map, players):
+    """Check which players still have territory"""
     for check_player in players:
         check_player.in_game = bool(map.count_territories(check_player))
 
 def active_players(players):
+    """Count of players still in game"""
     len([p for p in players if p.in_game])
 
-def play_round(map, cards, players, first, options):
+def play_round(
+        map, cards, players, first, name: str, turn, options):
     for player in players:
         if player.in_game:
             logging.info("{}'s turn".format(player.name))
+            map.make_graph("map-{}-{}-{}".format(name, turn, player.index))
             play_turn(map, cards, player, first, options)
             check_players(map, players)
         if active_players(players) == 1:
@@ -98,7 +107,7 @@ def attacks(map, player, options):
             if result:
                 at_least_one_victory = True
         else:
-            logging.info("Invalid target!")
+            logging.debug("Invalid target {}->{}!".format(territory_from, territory_to))
     return at_least_one_victory
 
 def battle_results(ac, dc, attacker_wins, name):
@@ -117,13 +126,13 @@ def attack(map, player, options, territory_from, territory_to):
         a, d = combat(commited_attackers, territory_to.armies, options)
         ac += a
         dc += d
-        logging.info("Combat in {} attacker loses {} and defender loses {}"
-                     .format(territory_to, d, a))
+        # logging.info("Combat in {} attacker loses {} and defender loses {}"
+        #              .format(territory_to, d, a))
         map.remove_armies(territory_from, d)
         map.remove_armies(territory_to, a)
     battle_results(ac, dc, territory_to.armies == 0, territory_to.name)
     if territory_to.armies == 0:
-        invaders = min(commited_attackers, territory_from.armies)
+        invaders = min(commited_attackers, territory_from.armies - 1)
         map.conquer(player, territory_from, territory_to,
                     max(player.attack_move(map, territory_from, territory_to), invaders))
         return True

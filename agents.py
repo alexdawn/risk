@@ -86,8 +86,8 @@ class Human(Player):
         return int(armies)
 
 class Passive(Player):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, index, name):
+        super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
@@ -129,8 +129,8 @@ class Passive(Player):
         raise NotImplementedError()
 
 class Standard(Player):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, index, name):
+        super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
@@ -359,5 +359,5 @@ def make_players(options):
     assert options['players'] >= 2
     players = []
     for i in range(options['players']):
-        players.append(Greedy(i, "Greedy"))
+        players.append(Standard(i, "Standard {}".format(i)))
     return players
