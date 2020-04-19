@@ -58,35 +58,20 @@ def probable_outcome(
     prob = 0
     if attackers == 1 and defenders == 1:
         for y1, z1 in product(*([die] * 2)):
-            if y1 > z1 and defender_loses == 1:
-                prob += Attacker(y1, None) * Defender(z1, None)
-            elif y1 <= z1 and defender_loses == 0:
+            if (y1 > z1 and defender_loses == 1) or (y1 <= z1 and defender_loses == 0):
                 prob += Attacker(y1, None) * Defender(z1, None)
     elif attackers == 1:
         for y1, z1, z2 in product(*([die] * 3)):
-            if y1 > z1 and defender_loses == 1:
-                prob += Attacker(y1, None) * Defender(z1, z2)
-            elif y1 <= z1 and defender_loses == 0:
+            if (y1 > z1 and defender_loses == 1) or (y1 <= z1 and defender_loses == 0):
                 prob += Attacker(y1, None) * Defender(z1, z2)
     elif defenders == 1:
         for y1, y2, z1 in product(*([die] * 3)):
-            if y1 > z1 and defender_loses == 1:
-                prob += Attacker(y1, y2) * Defender(z1, None)
-            elif y1 <= z1 and defender_loses == 0:
+            if (y1 > z1 and defender_loses == 1) or (y1 <= z1 and defender_loses == 0):
                 prob += Attacker(y1, y2) * Defender(z1, None)
     else:
         for y1, y2, z1, z2 in product(*([die] * 4)):
-            if y1 > z1 and y2 > z2 and defender_loses == 2:
-                prob += Attacker(y1, y2) * Defender(z1, z2)
-            elif ((y1 > z1 and y2 <= z2) or (y1 <= z1 and y2 > z2)) and defender_loses == 1:
-                x = Attacker(y1, y2) * Defender(z1, z2)
-                prob += x
-            elif y1 <= z1 and y2 <= z2 and defender_loses == 0:
+            if ((y1 > z1 and y2 > z2 and defender_loses == 2) or
+                    (((y1 > z1 and y2 <= z2) or (y1 <= z1 and y2 > z2)) and defender_loses == 1) or
+                    (y1 <= z1 and y2 <= z2 and defender_loses == 0)):
                 prob += Attacker(y1, y2) * Defender(z1, z2)
     return prob
-
-
-if __name__ == '__main__':
-    for i, j, k in product(range(1, 4), range(1, 3), range(0, 3)):
-        if k <= i and k <= j:
-            print(i, j, k, round(probable_outcome(i, j, k), 3))
