@@ -19,11 +19,12 @@ class Map:
     def make_copy(self):
         return copy.deepcopy(self)
 
-    def make_graph(self, name: str) -> None:
+    def make_graph(self, name: str, description: str) -> None:
         g = Graph('Map', filename='world.gv', engine='neato')
         # continent_graphs = {
         #     n: g.subgraph(name='cluster_{}'.format(n))
         #     for n in self.continents.keys()}
+        g.attr(label=description)
         g.attr('node', colorscheme="pastel19", style="filled")
         for t in self.territories:
             # with continent_graphs[t.continent] as c:

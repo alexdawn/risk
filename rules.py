@@ -1,9 +1,14 @@
 import math
 import logging
+import io
 from collections import defaultdict
 from typing import List, Dict, Any
 
 import dice
+
+# Create the logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 TERRITORIES_PER_ARMY = 3
 MIN_DEPLOYMENT = 3
@@ -53,9 +58,18 @@ def play_round(
         map, cards, players, first, name: str, turn, options):
     for player in players:
         if player.in_game:
+            # Setup the console handler with a StringIO object
+            log_capture_string = io.StringIO()
+            ch = logging.StreamHandler(log_capture_string)
+
+            # Add the console handler to the logger
+            logger.addHandler(ch)
             logging.info("{}'s turn".format(player.name))
-            map.make_graph("map-{}-{}-{}".format(name, turn, player.index))
             play_turn(map, cards, player, first, options)
+            log_contents = log_capture_string.getvalue()
+            logging.RemoveHandler(ch)
+            log_capture_string.close()
+            map.make_graph("map-{}-{}-{}".format(name, turn, player.index), log_contents.lower())
             check_players(map, players)
         if active_players(players) == 1:
             break
