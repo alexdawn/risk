@@ -2,6 +2,7 @@ import logging
 import copy
 import os
 from graphviz import Graph
+from collections import defaultdict
 
 
 class Map:
@@ -10,6 +11,7 @@ class Map:
         self.territories_by_name = {}
         self.continents = {}
         self.players = set()
+        self.player_territory_count = defaultdict(lambda: 0)
 
     def __repr__(self):
         return "\n".join("{}: {} armies owned by {}".format(
@@ -52,7 +54,8 @@ class Map:
             for player in players:
                 t = territories_to_be_allocated.pop()
                 t.set_armies(1)
-                t.owner = player
+                t.set_owner(player)
+                self.player_territory_count[player] += 1
                 if len(territories_to_be_allocated) == 0:
                     break
 
@@ -64,7 +67,9 @@ class Map:
 
     def conquer(self, player, territory_from, territory_to, armies):
         logging.info("{} taken over by {}".format(territory_to.name, player.name))
+        self.player_territory_count[territory_to.owner] -= 1
         territory_to.set_owner(player)
+        self.player_territory_count[player] += 1
         self.move_armies(territory_from, territory_to, armies)
 
     def add_armies(self, territory, armies):
@@ -81,7 +86,7 @@ class Map:
         territory.set_armies(max(territory.armies - armies, 0))
 
     def count_territories(self, player):
-        return sum(1 for t in self.territories if t.owner == player)
+        return self.player_territory_count[player]
 
     def count_continents(self, player):
         bonus = 0
