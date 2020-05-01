@@ -1,11 +1,14 @@
-import numpy as np
-from typing import Callable, Any
+from typing import Callable, Any, Tuple, Dict, List
 from itertools import product, chain
 from functools import lru_cache
+import warnings
+import numpy as np
 
-from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix
+from scipy.sparse import identity
 from scipy.sparse.linalg import inv
 
+warnings.filterwarnings('ignore')  # scipy generates tons of errors
 
 def probY(y1: int, y2: int = None) -> float:
     """Probability top two of 3 ordered dice Y1=y1 and Y2=y2"""
@@ -43,6 +46,7 @@ def probSingle(x: int, _: None) -> float:
 
 
 def dice(dice: int) -> Callable[[Any, Any], float]:
+    """Use the approriate probability distribution for number of dice"""
     functions = {
         1: probSingle,
         2: probZ,
@@ -83,36 +87,107 @@ def probable_outcome(
     return prob
 
 
-def probability_win(A, D):
-    # Generate possible states
+def generate_states(A: int, D: int)\
+        -> Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int]]:
+    """"Generate all the possible transient and outcome states from the initial state"""
     transient_state = [
         (a, d) for a, d in product(range(1, A + 1), range(1, D + 1))
     ]
     absorbing_state = [
         (a, d) for a, d in chain(zip([0] * D, range(1, D + 1)), zip(range(1, A + 1), [0] * A))
     ]
-    states = transient_state + absorbing_state
-    state_lookup = {s: i for i, s in enumerate(states)}
-    state_size = len(states)
+    return transient_state, absorbing_state
 
+
+def generate_prob_matrix(A: int, D: int)\
+        -> Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int], np.ndarray]:
+    """Generate the probability outcome matrix"""
+    transient_state, absorbing_state = generate_states(A, D)
+    transient_state_lookup = {s: i for i, s in enumerate(transient_state)}
+    absorbing_state_lookup = {s: i for i, s in enumerate(absorbing_state)}
+    transient_length, absorbing_length = len(transient_state), len(absorbing_state)
     # Add probability to transition elements
-    row = []
-    col = []
-    data = []
-    for i, (a, d) in enumerate(states):
-        if a > 0 and d > 0:
-            max_deaths = 2 if a > 1 and d > 1 else 1
-            for dl in range(0, max_deaths + 1):
-                al = max_deaths - dl
-                row.append(i)
-                col.append(state_lookup[(a - al, d - dl)])
-                data.append(probable_outcome(min(a, 3), min(d, 2), dl))
+    Qrow = []
+    Qcol = []
+    Qdata = []
+    Rrow = []
+    Rcol = []
+    Rdata = []
+    for i, (a, d) in enumerate(transient_state):
+        max_deaths = 2 if a > 1 and d > 1 else 1
+        for dl in range(0, max_deaths + 1):
+            al = max_deaths - dl
+            na, nd = a - al, d - dl
+            if a - al > 0 and d - dl > 0:
+                Qrow.append(i)
+                Qcol.append(transient_state_lookup[(na, nd)])
+                Qdata.append(probable_outcome(min(a, 3), min(d, 2), dl))
+            else:
+                Rrow.append(i)
+                Rcol.append(absorbing_state_lookup[(na, nd)])
+                Rdata.append(probable_outcome(min(a, 3), min(d, 2), dl))
+    Q = csc_matrix((Qdata, (Qrow, Qcol)), shape=(transient_length, transient_length))
+    R = csc_matrix((Rdata, (Rrow, Rcol)), shape=(transient_length, absorbing_length))
+    iden = identity(transient_length)
+    F = inv(iden - Q) * R
+    return transient_state_lookup, absorbing_state_lookup, F
+
+
+def filter_states(states, probs):
+    """Filter invalid states"""
+    reverse_states = {y: x for x, y in states.items()}
+    new_states, new_probs = tuple(
+        zip(*list((reverse_states[i], prob) for i, prob in enumerate(probs) if prob > 0)))
+    return new_states, new_probs
+
+
+def get_matrix_row(F, row: int):
+    if len(F.shape) > 1:
+        return F[row][:].toarray()[0]
+    else:
+        return F
+
+
+def wrap_probabilities()\
+        -> Callable[[int, int], Tuple[Dict[Tuple[int, int], int], np.ndarray]]:
+    """Avoids generating probability matrix if a larger one already exists"""
+    F = []  # type: List[List[int]]
+    transient_state_lookup = {}  # type: Dict[Tuple[int, int], int]
+    absorbing_state_lookup = {}  # type: Dict[Tuple[int, int], int]
+
+    def get_prob(a: int, d: int) -> Tuple[Dict[Tuple[int, int], int], np.ndarray]:
+        nonlocal F, transient_state_lookup, absorbing_state_lookup
+        if (a, d) in transient_state_lookup.keys():
+            return filter_states(
+                absorbing_state_lookup, get_matrix_row(F, transient_state_lookup[(a, d)]))
         else:
-            row.append(i)
-            col.append(i)
-            data.append(1)
-    A = csr_matrix((data, (row, col)), shape=(state_size, state_size))
-    print(A)
+            transient_state_lookup, absorbing_state_lookup, F = generate_prob_matrix(a, d)
+            return filter_states(absorbing_state_lookup, get_matrix_row(F, -1))
+    return get_prob
 
 
-probability_win(30, 30)
+# Need a smarter way of doing this?
+get_cached_probabilities = wrap_probabilities()
+
+
+@lru_cache()
+def calculate_win_prob(a: int, d: int) -> float:
+    _, probs = get_cached_probabilities(a, d)
+    return sum(probs[d:])
+
+
+@lru_cache()
+def calculate_expected_remainder(a: int, d: int) -> Tuple[float, float, float, float]:
+    """Calculated Expectations and Standard Deviations from a Battle"""
+    states, probs = get_cached_probabilities(a, d)
+    ea = sum(a * p for (a, d), p in zip(states, probs))
+    ed = sum(d * p for (a, d), p in zip(states, probs))
+    va = sum(p * pow(a - ea, 2) for (a, d), p in zip(states, probs))
+    vd = sum(p * pow(d - ed, 2) for (a, d), p in zip(states, probs))
+    return ea, va, ed, vd
+
+
+def generate_outcome(a: int, d: int, repeats: int = 1) -> List[Tuple[int, int]]:
+    """Run a battle using the matrix instead of simulated dice"""
+    states, probs = get_cached_probabilities(a, d)
+    return [states[x] for x in np.random.choice(range(len(states)), repeats, p=probs)]

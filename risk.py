@@ -1,17 +1,21 @@
 from collections import defaultdict
 import logging
+import time
 from typing import Dict, Any
 
 import board
 import agents
 import rules
 import cards
+from battle_estimator import get_cached_probabilities
 
 logging.getLogger().setLevel(logging.INFO)
+logging.disable(logging.CRITICAL)
 
 options = {
     'players': 9,
     'stocasticity': True,  # False does not roll dice
+    'markov': True,  # If True replaces simulated dice roll with the probable outcomes
     'initial_placement': 'random',  # random|pick
     'deployment': 'blob',  # blob|free|spread
     'extra_start_deployment': False,
@@ -33,7 +37,10 @@ def risk(name: str, options: Dict[str, Any]):
 
 if __name__ == '__main__':
     tournament_score = defaultdict(lambda: {'wins': 0, 'avg_turns': 0})
-    for i in range(1):
+    if options['markov']:
+        get_cached_probabilities(50, 50)  # Build a large state cache to avoid many matrix cals
+    start = time.time()
+    for i in range(10):
         name = "game {}".format(i)
         logging.debug(name)
         winner, turns = risk(name, options)
@@ -43,4 +50,6 @@ if __name__ == '__main__':
             (tournament_score[winner]['wins'] - 1) *
             tournament_score[winner]['avg_turns'] + turns) /\
             tournament_score[winner]['wins']
+    end = time.time()
+    print(end - start)
     print(tournament_score)
