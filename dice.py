@@ -1,7 +1,5 @@
-import random
+import numpy as np
 
-def roll_die():
-    return random.randrange(1, 6)
 
 def roll_dice(number):
-    return [roll_die() for i in range(number)]
+    return np.random.randint(1, 7, size=number)
