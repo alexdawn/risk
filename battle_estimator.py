@@ -2,6 +2,7 @@ from typing import Callable, Any, Tuple, Dict, List
 from itertools import product, chain
 from functools import lru_cache
 import warnings
+import logging
 import numpy as np
 
 from scipy.sparse import csc_matrix
@@ -9,6 +10,14 @@ from scipy.sparse import identity
 from scipy.sparse.linalg import inv
 
 warnings.filterwarnings('ignore')  # scipy generates tons of errors
+
+# Battle Estimator
+#
+# Markov chains can be used to efficiently calculate all outcomes from
+# a battle of A attackers and D defenders, to calculate the probability of the
+# attacker or defender winning, as well as the expected number of survivors
+# and even the range of likely outcomes.
+# This allows an A.I. to consider only likely outcomes
 
 def probY(y1: int, y2: int = None) -> float:
     """Probability top two of 3 ordered dice Y1=y1 and Y2=y2"""
@@ -133,15 +142,21 @@ def generate_prob_matrix(A: int, D: int)\
     return transient_state_lookup, absorbing_state_lookup, F
 
 
-def filter_states(states, probs):
+def filter_states(states, probs, a, d):
     """Filter invalid states"""
+    if a == 1 and d == 5:
+        import pdb
+        pdb.set_trace()
     reverse_states = {y: x for x, y in states.items()}
     new_states, new_probs = tuple(
-        zip(*list((reverse_states[i], prob) for i, prob in enumerate(probs) if prob > 0)))
+        zip(*((s, p) for s, p in list((reverse_states[i], prob)
+            for i, prob in enumerate(probs)) if s[0] <= a or s[1] <= d)))
     return new_states, new_probs
 
 
 def get_matrix_row(F, row: int):
+    """Gets the ith row of the matrix
+    needed for getting probabilities of outcomes from starting state i"""
     if len(F.shape) > 1:
         return F[row][:].toarray()[0]
     else:
@@ -159,10 +174,15 @@ def wrap_probabilities()\
         nonlocal F, transient_state_lookup, absorbing_state_lookup
         if (a, d) in transient_state_lookup.keys():
             return filter_states(
-                absorbing_state_lookup, get_matrix_row(F, transient_state_lookup[(a, d)]))
+                absorbing_state_lookup, get_matrix_row(F, transient_state_lookup[(a, d)]), a, d)
         else:
-            transient_state_lookup, absorbing_state_lookup, F = generate_prob_matrix(a, d)
-            return filter_states(absorbing_state_lookup, get_matrix_row(F, -1))
+            logging.critical("State outcomes not calculated for ({},{})".format(a, d))
+            b = max(a, d)  # avoid shrinking the matrix
+            transient_state_lookup, absorbing_state_lookup, F = generate_prob_matrix(b, b)
+            logging.critical("Calculated")
+            # need the lookup for where
+            return filter_states(
+                absorbing_state_lookup, get_matrix_row(F, transient_state_lookup[(a, d)]), a, d)
     return get_prob
 
 
