@@ -144,9 +144,6 @@ def generate_prob_matrix(A: int, D: int)\
 
 def filter_states(states, probs, a, d):
     """Filter invalid states"""
-    if a == 1 and d == 5:
-        import pdb
-        pdb.set_trace()
     reverse_states = {y: x for x, y in states.items()}
     new_states, new_probs = tuple(
         zip(*((s, p) for s, p in list((reverse_states[i], prob)

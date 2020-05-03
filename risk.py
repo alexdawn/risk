@@ -15,14 +15,16 @@ logging.disable(logging.CRITICAL)
 options = {
     'players': 9,
     'stocasticity': True,  # False does not roll dice
-    'markov': True,  # If True replaces simulated dice roll with the probable outcomes
+    'markov': False,  # If True replaces simulated dice roll with the probable outcomes
     'initial_placement': 'random',  # random|pick
     'deployment': 'blob',  # blob|free|spread
     'extra_start_deployment': False,
     'attack_limit': None,  # None for no limit
     'death_or_glory': True,  # Cannot withdraw after commiting
     'end_of_turn_slide': False,
-    'bonus_cards': 'fixed'  # none|fixed|yes
+    'bonus_cards': 'fixed',  # none|fixed|yes
+    'plot_gameplay': False,  # if True generate graphviz plots in ./output for each turn
+    'logging_level': logging.CRITICAL
 }  # type: Dict[str, Any]
 
 def risk(name: str, options: Dict[str, Any]):
@@ -36,6 +38,7 @@ def risk(name: str, options: Dict[str, Any]):
 
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(options['logging_level'])
     tournament_score = defaultdict(lambda: {'wins': 0, 'avg_turns': 0})
     if options['markov']:
         get_cached_probabilities(50, 50)  # Build a large state cache to avoid many matrix cals
