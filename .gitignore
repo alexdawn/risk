@@ -2,3 +2,4 @@
 *.prof
 /risk/
 .mypy_cache
+.coverage

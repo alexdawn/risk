@@ -1,3 +1,0 @@
-source ./risk/bin/activate
-python -m cProfile -o risk.prof risk.py
-snakeviz risk.prof
