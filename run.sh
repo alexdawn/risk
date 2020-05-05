@@ -78,14 +78,6 @@ function build_default() {
 function build_setup() {
     command virtualenv --version > /dev/null || { echo "Missing virtualenv - you need to install it." ; exit 1 ; }
     command pip --version > /dev/null || { echo "Missing pip - you need to install it." ; exit 2 ; }
-    if which python | grep -w "$ENV" > /dev/null ; then
-        echo "Using existing environment $ENV"
-        source "$ENV/bin/activate"
-    else
-        python3 -m venv "$ENV"
-        source "$ENV/bin/activate"
-        pip install -r requirements.txt
-    fi
 }
 
 # function build_pack() {
@@ -99,8 +91,8 @@ function build_setup() {
 # }
 
 function build_report() {
-    coverage report --fail-under 75 --omit='*/tests/*'
-    coverage html --fail-under 75 --omit='*/tests/*'
+    coverage report --fail-under 75 --omit='./risk/*'
+    coverage html --fail-under 75 --omit='./risk/*'
 }
 
 cmd="${1:-default}"

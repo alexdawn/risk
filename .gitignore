@@ -3,3 +3,4 @@
 /risk/
 .mypy_cache
 .coverage
+/htmlcov/
