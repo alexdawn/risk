@@ -17,6 +17,7 @@ MAX_ATTACK = 3
 MAX_DEFENSE = 2
 CALL_STALEMATE = 1000
 
+
 def summary(map):
     """Log how many territories each player has"""
     ownership = defaultdict(lambda: 0)
@@ -47,14 +48,17 @@ def play_game(
         winner = 'Draw'
     return winner, turn
 
+
 def check_players(map, players):
     """Check which players still have territory"""
     for check_player in players:
         check_player.in_game = bool(map.count_territories(check_player))
 
+
 def active_players(players):
     """Count of players still in game"""
     len([p for p in players if p.in_game])
+
 
 def play_round(
         map, cards, players, first, name: str, turn, options):
@@ -69,10 +73,12 @@ def play_round(
             logger.handlers.pop()
             log_capture_string.close()
             if options['plot_gameplay']:
-                map.make_graph("map-{}-{}-{}".format(name, turn, player.index), log_contents.lower())
+                map.make_graph(
+                    "map-{}-{}-{}".format(name, turn, player.index), log_contents.lower())
             check_players(map, players)
         if active_players(players) == 1:
             break
+
 
 def play_turn(map, cards, player, first_turn, options):
     """Play a players turn with 3 phases"""
@@ -154,9 +160,9 @@ def attack(map, player, options, territory_from, territory_to):
         map.remove_armies(territory_to, dc)
     else:
         while ((True if options['death_or_glory']
-                else player.attack_continue(map, territory_from, territory_to))
-                and territory_from.armies > 1
-                and territory_to.armies > 0):
+                else player.attack_continue(map, territory_from, territory_to)) and
+                territory_from.armies > 1 and
+                territory_to.armies > 0):
             a, d = combat(commited_attackers, territory_to.armies, options)
             ac += a
             dc += d

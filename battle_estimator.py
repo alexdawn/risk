@@ -19,6 +19,7 @@ warnings.filterwarnings('ignore')  # scipy generates tons of errors
 # and even the range of likely outcomes.
 # This allows an A.I. to consider only likely outcomes
 
+
 def probY(y1: int, y2: int = None) -> float:
     """Probability top two of 3 ordered dice Y1=y1 and Y2=y2"""
     assert y1 > 0 and y1 <= 7

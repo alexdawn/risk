@@ -9,6 +9,7 @@ logging.getLogger().setLevel(logging.INFO)
 # TODO Killer heuristic
 # TODO negamax scout
 
+
 class Minimax():
     def __init__(self, max_depth, max_time):
         self.max_depth = max_depth

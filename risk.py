@@ -27,6 +27,7 @@ options = {
     'logging_level': logging.CRITICAL
 }  # type: Dict[str, Any]
 
+
 def risk(name: str, options: Dict[str, Any]):
     map = board.make_map()
     players = agents.make_players(options)

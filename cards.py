@@ -1,5 +1,6 @@
 class Card_Deck:
     SUITS = ["Infantry", "Calvary", "Cannon"]
+
     def __init__(self, map):
         self.cards = set()
         for i, t in enumerate(map.territories):

@@ -1,6 +1,7 @@
 from battle_estimator import probable_outcome, calculate_win_prob, generate_outcome
 import pytest
 
+
 # Check values match the Osborne figures
 @pytest.mark.parametrize("i,j,k,value", [
     (1, 1, 1, 0.417),

@@ -31,6 +31,7 @@ tree = [
     ]
 ]
 
+
 class GameState():
     """Fake game state for testing"""
     def __init__(self, tree):
@@ -50,6 +51,7 @@ class GameState():
             return self.tree
         else:
             return float("inf")  # no heurstic for this
+
 
 def test_minimax():
     game_state = GameState(tree)

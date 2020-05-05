@@ -1,6 +1,7 @@
 from collections import defaultdict
 import rules
 
+
 def test_combat(attack, defend, times):
     outcomes = defaultdict(int)
     for i in range(times):

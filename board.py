@@ -101,6 +101,7 @@ class Map:
         else:
             return 0
 
+
 class Terrority:
     def __init__(self, id, name, continent, coordinates, connections):
         self.id = id

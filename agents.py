@@ -5,6 +5,7 @@ import rules
 import heuristic
 from player import Player
 
+
 def basic_check_cards(player, map, armies):
     """Basic automatic card check, hand in the best set the hand has"""
     if (any(card.suit == "Infantry" for card in player.cards) and
@@ -27,6 +28,7 @@ def basic_check_cards(player, map, armies):
                 player.remove_first_match("Cannon")], 10
     else:
         return None, 0
+
 
 class Human(Player):
     def __init__(self, index, name):
@@ -85,6 +87,7 @@ class Human(Player):
                        .format(territory_from.armies - 1))
         return int(armies)
 
+
 class Passive(Player):
     def __init__(self, index, name):
         super().__init__(index, name)
@@ -127,6 +130,7 @@ class Passive(Player):
 
     def attack_move(self, map, territory_from, territory_to):
         raise NotImplementedError()
+
 
 class Standard(Player):
     def __init__(self, index, name):
@@ -283,6 +287,7 @@ class Pacifist(Player):
     def attack_move(self, map, territory_from, territory_to):
         return territory_from.armies - 1
 
+
 class Greedy(Player):
     """Plays the imediate best move"""
     def __init__(self, index, name):
@@ -354,6 +359,7 @@ class Greedy(Player):
 
     def attack_move(self, map, territory_from, territory_to):
         return territory_from.armies - 1
+
 
 def make_players(options):
     assert options['players'] >= 2
