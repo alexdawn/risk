@@ -1,3 +1,8 @@
+[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
+![GitHub last commit](https://img.shields.io/github/last-commit/alexdawn/risk)
+![GitHub issues](https://img.shields.io/github/issues/alexdawn/risk)
+![GitHub](https://img.shields.io/github/license/alexdawn/risk)
+
 # Readme
 
 This is a python script for AI to play and learn the game RISK, and variants of
