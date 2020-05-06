@@ -2,7 +2,7 @@
 
 THISDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PRJDIR=$THISDIR
-ENV="risk"
+ENV="venv"
 
 set -e
 set -u

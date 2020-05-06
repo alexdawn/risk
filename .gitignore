@@ -1,6 +1,6 @@
 *.pyc
 *.prof
-/risk/
+/venv/
 .mypy_cache
 .coverage
 /htmlcov/
