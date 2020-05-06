@@ -24,7 +24,7 @@ Source of a lot of useful references https://github.com/ZeyadZanaty/risk-game-ai
 
 * https://project.dke.maastrichtuniversity.nl/games/files/bsc/Hahn_Bsc-paper.pdf
 * Monte Carlo Tree Search http://cs229.stanford.edu/proj2012/LozanoBratz-ARiskyProposalDesigningARiskGamePlayingAgent.pdf
-* Gibson, R. An Automated Technique for Drafting Territoriesin the Board Game Risk
+* Gibson, R. An Automated Technique for Drafting Territories in the Board Game Risk
 * Markov Chains https://www4.stat.ncsu.edu/~jaosborn/research/RISK.pdf
 *
 
