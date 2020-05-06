@@ -1,6 +1,7 @@
 *.pyc
 *.prof
 /venv/
+/outputs/
+/htmlcov/
 .mypy_cache
 .coverage
-/htmlcov/

@@ -1,4 +1,4 @@
-from battle_estimator import probable_outcome, calculate_win_prob, generate_outcome
+from risk.battle_estimator import probable_outcome, calculate_win_prob, generate_outcome
 import pytest
 
 

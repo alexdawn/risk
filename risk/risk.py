@@ -13,7 +13,7 @@ logging.getLogger().setLevel(logging.INFO)
 logging.disable(logging.CRITICAL)
 
 options = {
-    'players': 9,
+    'players': 3,
     'stocasticity': True,  # False does not roll dice
     'markov': False,  # If True replaces simulated dice roll with the probable outcomes
     'initial_placement': 'random',  # random|pick
@@ -23,7 +23,7 @@ options = {
     'death_or_glory': True,  # Cannot withdraw after commiting
     'end_of_turn_slide': False,
     'bonus_cards': 'fixed',  # none|fixed|yes
-    'plot_gameplay': False,  # if True generate graphviz plots in ./output for each turn
+    'plot_gameplay': True,  # if True generate graphviz plots in ./output for each turn
     'logging_level': logging.CRITICAL
 }  # type: Dict[str, Any]
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     if options['markov']:
         get_cached_probabilities(50, 50)  # Build a large state cache to avoid many matrix cals
     start = time.time()
-    for i in range(10):
+    for i in range(1):
         name = "game {}".format(i)
         logging.debug(name)
         winner, turns = risk(name, options)

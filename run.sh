@@ -1,7 +1,7 @@
 #!/bin/bash
 
 THISDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PRJDIR=$THISDIR
+PRJDIR="$THISDIR/lib"
 ENV="venv"
 
 set -e
@@ -38,17 +38,17 @@ function build_build() {
     # python -m mypy "$PRJDIR" --config-file "$THISDIR/mypy.ini"
     (
         cd "$THISDIR"
-        flake8 . --ignore=W504
+        flake8 "$PRJDIR" --ignore=W504
     )
 }
 
 function build_profile() {
-    python -m cProfile -o risk.prof risk.py
+    python -m cProfile -o risk.prof "$PRJDIR/risk.py"
     snakeviz risk.prof
 }
 
 function build_citest() {
-     coverage run --branch -m pytest "$PRJDIR"
+     coverage run --branch -m pytest "./tests"
 }
 
 function build_restore() {
@@ -91,9 +91,13 @@ function build_setup() {
 # }
 
 function build_report() {
-    coverage report --fail-under 75 --omit='./risk/*'
-    coverage html --fail-under 75 --omit='./risk/*'
+    coverage report --fail-under 75 --omit='./venv/*'
+    coverage html --fail-under 75 --omit='./venv/*'
 }
+
+# function build_docs() {
+#   :
+# }
 
 cmd="${1:-default}"
 shift || true

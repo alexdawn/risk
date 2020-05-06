@@ -38,16 +38,21 @@ class Minimax():
 
     def search(self, move, function, game_state, alpha, beta, depth):
         """Function to search onward from a move, function can be either max or min"""
-        return (
-            move, function(game_state.next_state(move), alpha, beta, depth + 1))
+        moves, score = function(
+            game_state.next_state(move), alpha, beta, depth + 1)
+        if function.__name__ == 'max_play':
+            alpha = max(alpha, score)
+        else:
+            beta = min(beta, score)
+        return move, alpha, beta, score
 
     def min_play(self, game_state, alpha, beta, depth):
         logging.info("Min play at depth {}".format(depth))
         if self.is_search_termination(game_state, depth):
-            return game_state.evaluate()
+            return None, game_state.evaluate()
         branch_min = min(
             map(lambda move: self.search(move, self.max_play, game_state, alpha, beta, depth),
-                game_state.get_available_moves()), key=lambda x: x[1])
+                game_state.get_available_moves()), key=lambda x: x[-1])
         return branch_min
 
     def max_play(self, game_state, alpha, beta, depth):
@@ -55,8 +60,8 @@ class Minimax():
         if (game_state.is_gameover() or
                 depth > self.max_depth or
                 self.elapsed_time() > self.max_time):
-            return game_state.evaluate()
+            return None, game_state.evaluate()
         branch_max = max(
             map(lambda move: self.search(move, self.min_play, game_state, alpha, beta, depth),
-                game_state.get_available_moves()), key=lambda x: x[1])
+                game_state.get_available_moves()), key=lambda x: x[-1])
         return branch_max
