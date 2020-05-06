@@ -40,5 +40,8 @@ jobs:
     - name: Run Coverage
       run: |
         coverage
-    - name: Coveralls GitHub Action
-      run: coveralls
+    - name: Send coverage results to Coveralls
+      run: |
+        coveralls --repo-token $REPO_TOKEN --service-name github
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
