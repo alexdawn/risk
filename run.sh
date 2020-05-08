@@ -1,7 +1,7 @@
 #!/bin/bash
 
 THISDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PRJDIR="$THISDIR/lib"
+PRJDIR="$THISDIR/risk"
 ENV="venv"
 
 set -e
@@ -48,7 +48,7 @@ function build_profile() {
 }
 
 function build_citest() {
-     coverage run --branch -m pytest "./tests"
+     coverage run --branch --source="./risk" -m pytest "./tests"
 }
 
 function build_restore() {

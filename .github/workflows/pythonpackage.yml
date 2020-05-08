@@ -36,7 +36,7 @@ jobs:
         flake8 . --count --statistics
     - name: Run Coverage
       run: |
-        coverage run --branch -m pytest "./tests"
+        coverage run --branch --source="./risk" -m pytest "./tests"
     - name: Send coverage results to Coveralls
       run: |
         coveralls
