@@ -41,4 +41,4 @@ jobs:
       run: |
         coveralls
       env:
-        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_REPO_TOKEN: ${{ secrets. COVERALLS_REPO_TOKEN }}
