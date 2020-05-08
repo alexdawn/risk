@@ -39,6 +39,6 @@ jobs:
         coverage run --branch -m pytest "./tests"
     - name: Send coverage results to Coveralls
       run: |
-        coveralls --repo-token $REPO_TOKEN --service-name github
+        coveralls debug
       env:
         REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
