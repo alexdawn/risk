@@ -35,7 +35,7 @@ ENDHELP
 }
 
 function build_build() {
-    # python -m mypy "$PRJDIR" --config-file "$THISDIR/mypy.ini"
+    python -m mypy "$PRJDIR" --config-file "$THISDIR/mypy.ini"
     (
         cd "$THISDIR"
         flake8 "$PRJDIR" --ignore=W504

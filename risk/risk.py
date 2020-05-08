@@ -40,7 +40,7 @@ def risk(name: str, options: Dict[str, Any]):
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(options['logging_level'])
-    tournament_score = defaultdict(lambda: {'wins': 0, 'avg_turns': 0})
+    tournament_score = defaultdict(lambda: {'wins': 0, 'avg_turns': 0})  # type: Dict[str, Dict[str, int]]
     if options['markov']:
         get_cached_probabilities(50, 50)  # Build a large state cache to avoid many matrix cals
     start = time.time()

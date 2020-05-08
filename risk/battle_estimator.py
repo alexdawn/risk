@@ -23,7 +23,8 @@ warnings.filterwarnings('ignore')  # scipy generates tons of errors
 def probY(y1: int, y2: int = None) -> float:
     """Probability top two of 3 ordered dice Y1=y1 and Y2=y2"""
     assert y1 > 0 and y1 <= 7
-    assert y2 > 0 and y2 <= 7
+    if y2:
+        assert y2 > 0 and y2 <= 7
     if y2:
         if y1 == y2:
             return (3 * y1 - 2) / 216
@@ -32,13 +33,14 @@ def probY(y1: int, y2: int = None) -> float:
         else:
             return 0
     else:
-        return 1 - 3 * y1 + 3 * pow(y1, 2) / 216
+        return 1 - 3 * y1 + 3 * pow(float(y1), 2) / 216
 
 
 def probZ(z1: int, z2: int = None) -> float:
     """Probability of two ordered dice Z1=z1 and Z2=2z"""
     assert z1 > 0 and z1 <= 7
-    assert z2 > 0 and z2 <= 7
+    if z2:
+        assert z2 > 0 and z2 <= 7
     if z2:
         if z1 == z2:
             return 1 / 36
@@ -61,7 +63,7 @@ def dice(dice: int) -> Callable[[Any, Any], float]:
         1: probSingle,
         2: probZ,
         3: probY
-    }
+    }  # type: Dict[int, Callable[[Any, Any], float]]
     return functions[dice]
 
 
@@ -75,7 +77,7 @@ def probable_outcome(
     Attacker = dice(attackers)
     Defender = dice(defenders)
     die = range(1, 7)
-    prob = 0
+    prob = 0.0
     if attackers == 1 and defenders == 1:
         for y1, z1 in product(*([die] * 2)):
             if (y1 > z1 and defender_loses == 1) or (y1 <= z1 and defender_loses == 0):
@@ -98,7 +100,7 @@ def probable_outcome(
 
 
 def generate_states(A: int, D: int)\
-        -> Tuple[Dict[Tuple[int, int], int], Dict[Tuple[int, int], int]]:
+        -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]:
     """"Generate all the possible transient and outcome states from the initial state"""
     transient_state = [
         (a, d) for a, d in product(range(1, A + 1), range(1, D + 1))
@@ -143,7 +145,8 @@ def generate_prob_matrix(A: int, D: int)\
     return transient_state_lookup, absorbing_state_lookup, F
 
 
-def filter_states(states, probs, a, d):
+def filter_states(states: Dict[Tuple[int, int], int], probs: np.ndarray, a: int, d: int)\
+        -> Tuple[List[Tuple[int, int]], np.ndarray]:
     """Filter invalid states"""
     reverse_states = {y: x for x, y in states.items()}
     new_states, new_probs = tuple(
@@ -152,7 +155,7 @@ def filter_states(states, probs, a, d):
     return new_states, new_probs
 
 
-def get_matrix_row(F, row: int):
+def get_matrix_row(F: np.ndarray, row: int) -> np.ndarray:
     """Gets the ith row of the matrix
     needed for getting probabilities of outcomes from starting state i"""
     if len(F.shape) > 1:
@@ -162,13 +165,13 @@ def get_matrix_row(F, row: int):
 
 
 def wrap_probabilities()\
-        -> Callable[[int, int], Tuple[Dict[Tuple[int, int], int], np.ndarray]]:
+        -> Callable[[int, int], Tuple[List[Tuple[int, int]], np.ndarray]]:
     """Avoids generating probability matrix if a larger one already exists"""
     F = []  # type: List[List[int]]
     transient_state_lookup = {}  # type: Dict[Tuple[int, int], int]
     absorbing_state_lookup = {}  # type: Dict[Tuple[int, int], int]
 
-    def get_prob(a: int, d: int) -> Tuple[Dict[Tuple[int, int], int], np.ndarray]:
+    def get_prob(a: int, d: int) -> Tuple[List[Tuple[int, int]], np.ndarray]:
         nonlocal F, transient_state_lookup, absorbing_state_lookup
         if (a, d) in transient_state_lookup.keys():
             return filter_states(
