@@ -1,15 +1,17 @@
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import List
     from board import World, Territory
     from cards import Card
+
 
 class Player:
     def __init__(self, index: int, name: str):
         self.index = index
         self.name = name
         self.in_game = True
-        self.cards = []  # type: 'List[Card]'
+        self.cards = []  # type: List[Card]
         self.success = False
 
     def __repr__(self) -> str:

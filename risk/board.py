@@ -6,7 +6,7 @@ from graphviz import Graph
 from collections import defaultdict
 
 if TYPE_CHECKING:
-    from player import Player
+    from player import Player, Set
 
 
 class World:
@@ -40,7 +40,8 @@ class World:
             os.remove('outputs/{}'.format(name))
 
     def make_territory(
-            self, id: int, name: str, continent: str, coordinates: Tuple[float, float], connections: List[int]):
+            self, id: int, name: str, continent: str,
+            coordinates: Tuple[float, float], connections: List[int]):
         territory = Territory(id, name, continent, coordinates, connections)  # type: Territory
         self.territories.append(territory)
         self.territories_by_name[name] = territory
@@ -49,10 +50,12 @@ class World:
         return self.territories_by_name[name]
 
     def allocate_territories(self, players: 'List[Player]') -> None:
+        """Deal out territories at random to a set of players"""
         territories_to_be_allocated = set(self.territories)
         self.players = set(players)
         while len(territories_to_be_allocated) > 0:
             for player in players:
+                # pop a random remaining territory
                 t = territories_to_be_allocated.pop()
                 t.set_armies(1)
                 t.set_owner(player)
@@ -67,7 +70,8 @@ class World:
         self.continent_values[name] = value
 
     def conquer(
-            self, player: 'Player', territory_from: 'Territory', territory_to: 'Territory', armies: int)\
+            self, player: 'Player',
+            territory_from: 'Territory', territory_to: 'Territory', armies: int)\
             -> None:
         """Short hand for changing territory owner and moving armies"""
         assert armies < territory_from.armies
@@ -82,7 +86,8 @@ class World:
         logging.info("Add {} armies to {}".format(armies, territory.name))
         territory.set_armies(territory.armies + armies)
 
-    def move_armies(self, territory_from: 'Territory', territory_to: 'Territory', armies: int) -> None:
+    def move_armies(
+            self, territory_from: 'Territory', territory_to: 'Territory', armies: int) -> None:
         """Move x armies between territories"""
         logging.info("{} armies moved from {} to {}".format(
             armies, territory_from.name, territory_to.name))

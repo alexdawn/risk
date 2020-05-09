@@ -32,7 +32,8 @@ def summary(map: 'World') -> None:
 
 
 def play_game(
-        name: str, map: 'World', cards: 'CardDeck', players: 'List[Player]', options: Dict[str, Any])\
+        name: str, map: 'World', cards: 'CardDeck',
+        players: 'List[Player]', options: Dict[str, Any])\
         -> Tuple[str, int]:
     """Plays a whole game until there is a winner or it stalemates"""
     map.allocate_territories(players)
@@ -86,7 +87,8 @@ def play_round(
 
 
 def play_turn(
-        map: 'World', cards: 'CardDeck', player: 'Player', first_turn: bool, options: Dict[str, Any])\
+        map: 'World', cards: 'CardDeck', player: 'Player',
+        first_turn: bool, options: Dict[str, Any])\
         -> None:
     """Play a players turn with 3 phases"""
     # 1. Deployment

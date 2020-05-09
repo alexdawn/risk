@@ -1,12 +1,17 @@
 import random
 import logging
+from typing import Tuple, List, TYPE_CHECKING
 
 from rules import attack
 import heuristic
 from player import Player
 
+if TYPE_CHECKING:
+    from board import World
+    from cards import Card
 
-def basic_check_cards(player, map, armies):
+
+def basic_check_cards(player: Player, map: 'World') -> Tuple[List[Card], int]:
     """Basic automatic card check, hand in the best set the hand has"""
     if (any(card.suit == "Infantry" for card in player.cards) and
             any(card.suit == "Cavalry" for card in player.cards) and
@@ -27,7 +32,7 @@ def basic_check_cards(player, map, armies):
                 player.remove_first_match("Cannon"),
                 player.remove_first_match("Cannon")], 10
     else:
-        return None, 0
+        return [], 0
 
 
 class Human(Player):
