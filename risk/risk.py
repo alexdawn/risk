@@ -32,7 +32,7 @@ def risk(name: str, options: Dict[str, Any]):
     map = board.make_map()
     players = agents.make_players(options)
     if options['bonus_cards'] == 'yes':
-        deck = cards.Card_Deck(map)
+        deck = cards.CardDeck(map)
     else:
         deck = None
     return rules.play_game(name, map, deck, players, options)
@@ -48,7 +48,6 @@ if __name__ == '__main__':
         name = "game {}".format(i)
         logging.debug(name)
         winner, turns = risk(name, options)
-        winner = winner if type(winner) == str else winner.name
         tournament_score[winner]['wins'] += 1
         tournament_score[winner]['avg_turns'] = (
             (tournament_score[winner]['wins'] - 1) *

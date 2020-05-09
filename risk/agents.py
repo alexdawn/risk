@@ -1,7 +1,7 @@
 import random
 import logging
 
-import rules
+from rules import attack
 import heuristic
 from player import Player
 
@@ -322,7 +322,7 @@ class Greedy(Player):
         def test(args):
             territory_from, territory_to = args
             prior_from, prior_to = territory_from.armies, territory_to.armies
-            rules.attack(map, self, options, territory_from, territory_to)
+            attack(map, self, options, territory_from, territory_to)
             value = heuristic.heuristic(sandbox, self)
             territory_from.armies, territory_to.armies = prior_from, prior_to
             return value

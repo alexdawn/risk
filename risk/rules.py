@@ -2,10 +2,15 @@ import math
 import logging
 import io
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple, TYPE_CHECKING
 
 import dice
 from battle_estimator import generate_outcome
+
+if TYPE_CHECKING:
+    from board import World, Territory
+    from cards import Card, CardDeck
+    from player import Player
 
 # Create the logger
 logger = logging.getLogger()
@@ -18,18 +23,17 @@ MAX_DEFENSE = 2
 CALL_STALEMATE = 1000
 
 
-def summary(map):
+def summary(map: 'World') -> None:
     """Log how many territories each player has"""
-    ownership = defaultdict(lambda: 0)
+    ownership = defaultdict(lambda: 0)  # type: 'Dict[Player, int]'
     for t in map.territories:
         ownership[t.owner] += 1
     logging.info(dict(ownership))
 
 
 def play_game(
-        name: str,
-        map,
-        cards, players: List[Any], options: Dict[str, Any]):
+        name: str, map: 'World', cards: 'CardDeck', players: 'List[Player]', options: Dict[str, Any])\
+        -> Tuple[str, int]:
     """Plays a whole game until there is a winner or it stalemates"""
     map.allocate_territories(players)
     turn = 1
@@ -42,26 +46,27 @@ def play_game(
         turn += 1
         first = False
     if turn < CALL_STALEMATE:  # stop game going on forever
-        winner = [p for p in players if p.in_game][0]
-        logging.info("Winner is {}".format(winner.name))
+        winner = [p.name for p in players if p.in_game][0]
+        logging.info("Winner is {}".format(winner))
     else:
         winner = 'Draw'
     return winner, turn
 
 
-def check_players(map, players):
+def check_players(map: 'World', players: 'List[Player]') -> None:
     """Check which players still have territory"""
     for check_player in players:
         check_player.in_game = bool(map.count_territories(check_player))
 
 
-def active_players(players):
+def active_players(players: 'List[Player]') -> int:
     """Count of players still in game"""
-    len([p for p in players if p.in_game])
+    return len([p for p in players if p.in_game])
 
 
 def play_round(
-        map, cards, players, first, name: str, turn, options):
+        map: 'World', cards: 'CardDeck', players: 'List[Player]', first: bool, name: str, turn: int,
+        options: Dict[str, Any]) -> None:
     for player in players:
         if player.in_game:
             log_capture_string = io.StringIO()  # Capture the log to printing turn outcomes
@@ -80,7 +85,9 @@ def play_round(
             break
 
 
-def play_turn(map, cards, player, first_turn, options):
+def play_turn(
+        map: 'World', cards: 'CardDeck', player: 'Player', first_turn: bool, options: Dict[str, Any])\
+        -> None:
     """Play a players turn with 3 phases"""
     # 1. Deployment
     base_armies = calculate_troop_deployment(map, player)
@@ -109,22 +116,22 @@ def play_turn(map, cards, player, first_turn, options):
             slide(map, player)
 
 
-def deploy(map, player, armies):
+def deploy(map: 'World', player: 'Player', armies: int):
     """Ask the player where they want to deploy"""
     player.deploy(map, armies)
 
 
-def calculate_contienent_bonus(map, player):
+def calculate_contienent_bonus(map: 'World', player: 'Player') -> int:
     """Calculate the contient bouns for player"""
-    return map.count_continents(player)
+    return int(map.count_continents(player))
 
 
-def calculate_troop_deployment(map, player):
+def calculate_troop_deployment(map: 'World', player: 'Player') -> int:
     """Calculate how many troops player earns from territories owned"""
     return max(math.floor(map.count_territories(player) / TERRITORIES_PER_ARMY), MIN_DEPLOYMENT)
 
 
-def attacks(map, player, options):
+def attacks(map: 'World', player: 'Player', options: Dict[str, Any]) -> bool:
     """Play out the list of combats player specifies"""
     at_least_one_victory = False
     attack_plan = player.attacks(map, options)[:options['attack_limit']]
@@ -142,13 +149,16 @@ def attacks(map, player, options):
     return at_least_one_victory
 
 
-def battle_results(ac, dc, attacker_wins, name):
+def battle_results(ac: int, dc: int, attacker_wins: bool, name: str) -> None:
     """Log results of combat"""
     prefix = "Attacker wins" if attacker_wins else "Defender holds"
     logging.info("{} {}, losses Attacker: {} Defender {}".format(prefix, name, dc, ac))
 
 
-def attack(map, player, options, territory_from, territory_to):
+def attack(
+        map: 'World', player: 'Player', options: Dict[str, Any],
+        territory_from: 'Territory', territory_to: 'Territory')\
+        -> bool:
     """Attack a territory with another territory and play out combat"""
     ac, dc = 0, 0
     commited_attackers = player.attack_commit(map, territory_from, territory_to)
@@ -178,7 +188,7 @@ def attack(map, player, options, territory_from, territory_to):
         return False
 
 
-def combat(attackers, defenders, options):
+def combat(attackers: int, defenders: int, options: Dict[str, Any]) -> Tuple[int, int]:
     """How combat works based on options"""
     assert attackers > 0
     assert defenders > 0
@@ -197,11 +207,11 @@ def combat(attackers, defenders, options):
     return attacker_kills, defender_kills
 
 
-def slide(map, player):
+def slide(map: 'World', player: 'Player') -> None:
     """Rules for end of turn slide"""
     pass
 
 
-def draw_card(cards):
+def draw_card(cards: 'CardDeck') -> 'Card':
     """process for drawing a card"""
     return cards.draw()

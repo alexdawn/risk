@@ -48,7 +48,7 @@ function build_profile() {
 }
 
 function build_citest() {
-     coverage run --branch --source="./risk" -m pytest "./tests"
+     coverage run --branch --source="./risk" -m pytest --pyargs "./risk" "./tests"
 }
 
 function build_restore() {
