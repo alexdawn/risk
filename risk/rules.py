@@ -4,13 +4,13 @@ import io
 from collections import defaultdict
 from typing import List, Dict, Any, Tuple, TYPE_CHECKING
 
-import dice
-from battle_estimator import generate_outcome
+import risk.dice as dice
+from risk.battle_estimator import generate_outcome
 
 if TYPE_CHECKING:
-    from board import World, Territory
-    from cards import Card, CardDeck
-    from player import Player
+    from risk.board import World, Territory
+    from risk.cards import Card, CardDeck
+    from risk.player import Player
 
 # Create the logger
 logger = logging.getLogger()

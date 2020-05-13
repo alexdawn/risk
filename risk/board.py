@@ -1,12 +1,13 @@
 import logging
 import copy
 import os
+import random
 from typing import List, Tuple, Dict, TYPE_CHECKING
 from graphviz import Graph
 from collections import defaultdict
 
 if TYPE_CHECKING:
-    from player import Player, Set
+    from risk.player import Player, Set
 
 
 class World:
@@ -56,7 +57,8 @@ class World:
         while len(territories_to_be_allocated) > 0:
             for player in players:
                 # pop a random remaining territory
-                t = territories_to_be_allocated.pop()
+                t = random.choice(tuple(territories_to_be_allocated))
+                territories_to_be_allocated.remove(t)
                 t.set_armies(1)
                 t.set_owner(player)
                 self.player_territory_count[player] += 1
@@ -112,7 +114,7 @@ class World:
     def calculate_contienent(self, player: 'Player', name: str) -> int:
         """Calculate if you get a bonus for contienent x"""
         members = [territory for territory in self.territories if territory.continent == name]
-        if all(m.owner.name == player.name for m in members):
+        if all(m.owner and m.owner.name == player.name for m in members):
             return int(self.continent_values[name])
         else:
             return 0
@@ -139,13 +141,15 @@ class Territory:
     def __repr__(self) -> str:
         return self.name
 
-    def set_owner(self, player: 'Player') -> None:
+    def set_owner(self, player: 'Player') -> 'Territory':
         """Set the owner to player"""
         self.owner = player
+        return self
 
-    def set_armies(self, armies: int) -> None:
+    def set_armies(self, armies: int) -> 'Territory':
         assert armies >= 0
         self.armies = armies
+        return self
 
 
 def make_map() -> World:

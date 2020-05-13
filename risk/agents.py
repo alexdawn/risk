@@ -2,13 +2,13 @@ import random
 import logging
 from typing import Tuple, List, TYPE_CHECKING
 
-from rules import attack
-import heuristic
-from player import Player
+from risk.rules import attack
+import risk.heuristic as heuristic
+from risk.player import Player
+from risk.cards import Card
 
 if TYPE_CHECKING:
-    from board import World
-    from cards import Card
+    from risk.board import World
 
 
 def basic_check_cards(player: Player, map: 'World') -> Tuple[List[Card], int]:

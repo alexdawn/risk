@@ -1,9 +1,9 @@
 from typing import Dict, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List
-    from board import World, Territory
-    from cards import Card
+    from risk.typing import List
+    from risk.board import World, Territory
+    from risk.cards import Card
 
 
 class Player:
@@ -17,7 +17,7 @@ class Player:
     def __repr__(self) -> str:
         return self.name
 
-    def remove_first_match(self, type):
+    def remove_first_match(self, type: str):
         raise NotImplementedError()
 
     def check_cards(self, map: 'World', armies: int):

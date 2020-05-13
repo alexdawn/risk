@@ -3,11 +3,11 @@ import logging
 import time
 from typing import Dict, Any
 
-import board
-import agents
-import rules
-import cards
-from battle_estimator import get_cached_probabilities
+import risk.board as board
+import risk.agents as agents
+import risk.rules as rules
+import risk.cards as cards
+from risk.battle_estimator import get_cached_probabilities
 
 logging.getLogger().setLevel(logging.INFO)
 logging.disable(logging.CRITICAL)

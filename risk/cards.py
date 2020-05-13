@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from board import World, Territory
+    from risk.board import World, Territory
 
 
 class CardDeck:

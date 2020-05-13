@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from board import World, Territory
-    from player import Player
+    from risk.board import World, Territory
+    from risk.player import Player
 
 BORDER_SECURITY_FACTOR = 1
 FOREIGN_TERRITORY_FACTOR = 1
@@ -28,6 +28,6 @@ def heuristic(map: 'World', player: 'Player') -> float:
     """Sum of BSR and number of foreign territories"""
     return float(sum(BORDER_SECURITY_FACTOR * border_security_ratio(map, t)
                      if t.owner.name == player.name else FOREIGN_TERRITORY_FACTOR
-                     for t in map.territories) -
+                     for t in map.territories if t.owner) -
                  OWN_CONTINENT_FACTOR * map.count_continents(player) + FOREIGN_CONTINENT_FACTOR *
                  sum(map.count_continents(p) for p in map.players if p.name != player.name))
