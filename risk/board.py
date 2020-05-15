@@ -2,12 +2,13 @@ import logging
 import copy
 import os
 import random
-from typing import List, Tuple, Dict, TYPE_CHECKING
+from typing import List, Tuple, Dict, TYPE_CHECKING, Optional, Any
 from graphviz import Graph
 from collections import defaultdict
 
 if TYPE_CHECKING:
-    from risk.player import Player, Set
+    from typing import Set
+    from risk.player import Player
 
 
 class World:
@@ -31,6 +32,7 @@ class World:
         g.attr(label=description)
         g.attr('node', colorscheme="pastel19", style="filled")
         for t in self.territories:
+            assert t.owner
             g.node(t.name, "{} ({:4d})".format(t.name, t.armies),
                    fillcolor=str(t.owner.index + 1), pos=t.get_coordinates())
             for i in t.connections:
@@ -57,11 +59,10 @@ class World:
         while len(territories_to_be_allocated) > 0:
             for player in players:
                 # pop a random remaining territory
-                t = random.choice(tuple(territories_to_be_allocated))
+                t = random.choice(sorted(list(territories_to_be_allocated)))
                 territories_to_be_allocated.remove(t)
-                t.set_armies(1)
-                t.set_owner(player)
-                self.player_territory_count[player] += 1
+                self.set_armies(t, 1)
+                self.set_owner(t, player)
                 if len(territories_to_be_allocated) == 0:
                     break
 
@@ -71,6 +72,17 @@ class World:
     def set_continent_army_value(self, name: str, value: int) -> None:
         self.continent_values[name] = value
 
+    def set_owner(self, territory: 'Territory', player: 'Player') -> 'World':
+        if territory.owner:
+            self.player_territory_count[territory.owner] -= 1
+        territory.set_owner(player)
+        self.player_territory_count[player] += 1
+        return self
+
+    def set_armies(self, territory: 'Territory', armies: int) -> 'World':
+        territory.set_armies(armies)
+        return self
+
     def conquer(
             self, player: 'Player',
             territory_from: 'Territory', territory_to: 'Territory', armies: int)\
@@ -78,9 +90,7 @@ class World:
         """Short hand for changing territory owner and moving armies"""
         assert armies < territory_from.armies
         logging.info("{} taken over by {}".format(territory_to.name, player.name))
-        self.player_territory_count[territory_to.owner] -= 1
-        territory_to.set_owner(player)
-        self.player_territory_count[player] += 1
+        self.set_owner(territory_to, player)
         self.move_armies(territory_from, territory_to, armies)
 
     def add_armies(self, territory: 'Territory', armies: int) -> None:
@@ -131,25 +141,32 @@ class Territory:
         self.coordinates = coordinates
         self.continent = continent
         self.connections = connections
-        self.owner = None  # type: Player
+        self.owner = None  # type: Optional[Player]
         self.armies = 0  # type: int
+
+    def __eq__(self, other) -> Any:
+        return self.id == other.id
+
+    def __lt__(self, other) -> Any:
+        return self.id < other.id
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self):
+        return hash(repr(self))
 
     def get_coordinates(self) -> str:
         """Generate a coordinate string for graphviz"""
         return "{},{}!".format(*self.coordinates)
 
-    def __repr__(self) -> str:
-        return self.name
-
-    def set_owner(self, player: 'Player') -> 'Territory':
+    def set_owner(self, player: 'Player') -> None:
         """Set the owner to player"""
         self.owner = player
-        return self
 
-    def set_armies(self, armies: int) -> 'Territory':
+    def set_armies(self, armies: int) -> None:
         assert armies >= 0
         self.armies = armies
-        return self
 
 
 def make_map() -> World:

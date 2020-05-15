@@ -3,6 +3,8 @@ import pytest
 from risk.board import World, Territory, make_map
 from risk.player import Player
 
+from fixture_board import test_scenario
+
 
 @pytest.fixture
 def full_map():
@@ -48,6 +50,11 @@ def test_world(full_map, two_players):
     assert full_map.calculate_contienent(two_players[1], 'Oceania') == 0
     assert full_map.count_continents(two_players[0]) >= 2
 
+
+def test_count_territories(test_scenario):
+    map, players = test_scenario
+    assert map.count_territories(players[0]) == 1
+    assert map.count_territories(players[1]) == 2
 
 def test_territory():
     test_territory = Territory(0, "Fooland", "Baz", (0, 0), [])

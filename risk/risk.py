@@ -1,13 +1,17 @@
 from collections import defaultdict
 import logging
 import time
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 
 import risk.board as board
 import risk.agents as agents
 import risk.rules as rules
 import risk.cards as cards
 from risk.battle_estimator import get_cached_probabilities
+
+if TYPE_CHECKING:
+    from typing import Optional
+    from risk.cards import CardDeck
 
 logging.getLogger().setLevel(logging.INFO)
 logging.disable(logging.CRITICAL)
@@ -32,7 +36,7 @@ def risk(name: str, options: Dict[str, Any]):
     map = board.make_map()
     players = agents.make_players(options)
     if options['bonus_cards'] == 'yes':
-        deck = cards.CardDeck(map)
+        deck = cards.CardDeck(map)  # type: Optional[CardDeck]
     else:
         deck = None
     return rules.play_game(name, map, deck, players, options)

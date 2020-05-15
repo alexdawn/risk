@@ -1,6 +1,8 @@
-from typing import TYPE_CHECKING
+import random
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from typing import List, Optional
     from risk.board import World, Territory
 
 
@@ -15,13 +17,28 @@ class CardDeck:
             self.cards.add(Card(None, "Wildcard"))
 
     def draw(self) -> 'Card':
-        return self.cards.pop()
+        c = random.choice(sorted(list(self.cards)))
+        self.cards.remove(c)
+        return c
 
-    def returns(self, cards) -> None:
+    def returns(self, cards: 'List[Card]') -> None:
         self.cards.update(cards)
 
 
 class Card:
-    def __init__(self, territory: 'Territory', suit: str) -> None:
+    def __init__(self, territory: 'Optional[Territory]', suit: str) -> None:
         self.suit = suit
         self.territory = territory
+
+    def __lt__(self, other: 'Card') -> Any:
+        # WIldcards ranked least
+        return self.territory < other.territory if self.territory else True
+
+    def __repr__(self) -> str:
+        return str((self.suit, self.territory))
+
+    def __hash__(self):
+        return hash(repr(self))
+
+    def __eq__(self, other: Any) -> bool:
+        return self.suit == other.suit and self.territory == self.territory

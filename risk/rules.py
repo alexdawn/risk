@@ -8,6 +8,7 @@ import risk.dice as dice
 from risk.battle_estimator import generate_outcome
 
 if TYPE_CHECKING:
+    from typing import Optional
     from risk.board import World, Territory
     from risk.cards import Card, CardDeck
     from risk.player import Player
@@ -25,14 +26,15 @@ CALL_STALEMATE = 1000
 
 def summary(map: 'World') -> None:
     """Log how many territories each player has"""
-    ownership = defaultdict(lambda: 0)  # type: 'Dict[Player, int]'
+    ownership = defaultdict(lambda: 0)  # type: 'Dict[str, int]'
     for t in map.territories:
-        ownership[t.owner] += 1
-    logging.info(dict(ownership))
+        if t.owner:
+            ownership[t.owner.name] += 1
+    logger.info(dict(ownership))
 
 
 def play_game(
-        name: str, map: 'World', cards: 'CardDeck',
+        name: str, map: 'World', cards: 'Optional[CardDeck]',
         players: 'List[Player]', options: Dict[str, Any])\
         -> Tuple[str, int]:
     """Plays a whole game until there is a winner or it stalemates"""
@@ -66,7 +68,7 @@ def active_players(players: 'List[Player]') -> int:
 
 
 def play_round(
-        map: 'World', cards: 'CardDeck', players: 'List[Player]', first: bool, name: str, turn: int,
+        map: 'World', cards: 'Optional[CardDeck]', players: 'List[Player]', first: bool, name: str, turn: int,
         options: Dict[str, Any]) -> None:
     for player in players:
         if player.in_game:
@@ -87,7 +89,7 @@ def play_round(
 
 
 def play_turn(
-        map: 'World', cards: 'CardDeck', player: 'Player',
+        map: 'World', cards: 'Optional[CardDeck]', player: 'Player',
         first_turn: bool, options: Dict[str, Any])\
         -> None:
     """Play a players turn with 3 phases"""
@@ -95,9 +97,11 @@ def play_turn(
     base_armies = calculate_troop_deployment(map, player)
     contienent_bonus = calculate_contienent_bonus(map, player)
     if options['bonus_cards'] == 'yes':
+        assert cards is not None
+        actual_cards: CardDeck = cards
         returns, card_bonus = player.check_cards(map, base_armies)
         if returns:
-            cards.returns(returns)
+            actual_cards.returns(returns)
     elif options['bonus_cards'] == 'fixed':
         card_bonus = 2 if player.success else 0
     elif options['bonus_cards'] == 'none':
@@ -112,7 +116,7 @@ def play_turn(
     if not first_turn:
         player.success = attacks(map, player, options)
         if player.success and options['bonus_cards'] == 'yes':
-            player.take_card(draw_card(cards))
+            player.take_card(draw_card(actual_cards))
         # 3. End of Turn Slide
         if options['end_of_turn_slide']:
             slide(map, player)

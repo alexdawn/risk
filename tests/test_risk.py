@@ -25,4 +25,4 @@ def options():
 def test_risk(options):
     random.seed(0)
     np.random.seed(0)
-    assert risk("Test Game", options)
+    assert risk("Test Game", options) == ('Standard 0', 20)

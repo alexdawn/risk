@@ -14,7 +14,7 @@ def border_threat(map: 'World', territory: 'Territory') -> int:
     """Sum of armies that threaten the province"""
     return sum(
         n.armies for n in map.get_neighbours(territory)
-        if territory.owner.name != n.owner.name)
+        if territory.owner != n.owner)
 
 
 def border_security_ratio(map: 'World', territory: 'Territory') -> float:

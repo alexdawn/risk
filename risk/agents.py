@@ -108,7 +108,7 @@ class Passive(Player):
                 return card
 
     def check_cards(self, map, armies):
-        return basic_check_cards(self, map, armies)
+        return basic_check_cards(self, map)
 
     def deploy(self, map, armies):
         """passive deployts to the first territory with the least troops"""
@@ -138,28 +138,29 @@ class Passive(Player):
 
 
 class Standard(Player):
-    def __init__(self, index, name):
+    def __init__(self, index: int, name: str):
         super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
 
-    def remove_first_match(self, type):
+    def remove_first_match(self, type: str):
         for i in range(len(self.cards)):
             card = self.cards[i]
             if card.suit == type:
                 self.cards.remove(card)
                 return card
 
-    def check_cards(self, map, armies):
-        return basic_check_cards(self, map, armies)
+    def check_cards(self, map: 'World', armies: int):
+        return basic_check_cards(self, map)
 
-    def deploy(self, map, armies):
+    def deploy(self, map, armies: int):
         """The player deployment logic"""
         own = [
             territory for territory in map.territories
             if territory.owner == self and any(
                 n for n in map.get_neighbours(territory) if n.owner != self)]
+        assert len(own) > 0
         map.add_armies(own[random.randint(0, len(own)) - 1], armies)
 
     def take_card(self, card):
@@ -203,7 +204,7 @@ class Aggresive(Player):
                 return card
 
     def check_cards(self, map, armies):
-        return basic_check_cards(self, map, armies)
+        return basic_check_cards(self, map)
 
     def deploy(self, map, armies):
         """Aggressive blobs as much as possible, in territories with a border"""
@@ -258,7 +259,7 @@ class Pacifist(Player):
                 return card
 
     def check_cards(self, map, armies):
-        return basic_check_cards(self, map, armies)
+        return basic_check_cards(self, map)
 
     def deploy(self, map, armies):
         """Passive deployts to the first territory with the least troops"""
@@ -309,7 +310,7 @@ class Greedy(Player):
                 return card
 
     def check_cards(self, map, armies):
-        return basic_check_cards(self, map, armies)
+        return basic_check_cards(self, map)
 
     def _trial_deployment(self, map, armies):
         sandbox = map.make_copy()
