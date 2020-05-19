@@ -42,14 +42,14 @@ def risk(name: str, options: Dict[str, Any]):
     return rules.play_game(name, map, deck, players, options)
 
 
-if __name__ == '__main__':
+def tournament(games: int, options):
     logging.getLogger().setLevel(options['logging_level'])
     tournament_score = defaultdict(
         lambda: {'wins': 0, 'avg_turns': 0})  # type: Dict[str, Dict[str, int]]
     if options['markov']:
         get_cached_probabilities(50, 50)  # Build a large state cache to avoid many matrix cals
     start = time.time()
-    for i in range(1):
+    for i in range(games):
         name = "game {}".format(i)
         logging.debug(name)
         winner, turns = risk(name, options)
@@ -60,4 +60,8 @@ if __name__ == '__main__':
             tournament_score[winner]['wins']
     end = time.time()
     print(end - start)
-    print(tournament_score)
+    return tournament_score
+
+
+if __name__ == '__main__':
+    tournament(10, options)

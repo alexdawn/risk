@@ -3,26 +3,46 @@ import logging
 import random
 import numpy as np
 
-from risk.risk import risk
+from risk.risk import risk, tournament
 
-@pytest.fixture
-def options():
-    return {
-    'players': 2,
-    'stocasticity': True,  # False does not roll dice
-    'markov': False,  # If True replaces simulated dice roll with the probable outcomes
-    'initial_placement': 'random',  # random|pick
-    'deployment': 'blob',  # blob|free|spread
-    'extra_start_deployment': False,
-    'attack_limit': None,  # None for no limit
-    'death_or_glory': True,  # Cannot withdraw after commiting
-    'end_of_turn_slide': False,
-    'bonus_cards': 'none',  # none|fixed|yes
-    'plot_gameplay': False,  # if True generate graphviz plots in ./output for each turn
-    'logging_level': logging.CRITICAL
-    }
+from fixture_board import options
+
 
 def test_risk(options):
     random.seed(0)
     np.random.seed(0)
     assert risk("Test Game", options) == ('Standard 0', 20)
+
+
+def test_tournament(options):
+    random.seed(0)
+    np.random.seed(0)
+    r = tournament(3, options)
+    assert dict(r) == {'Standard 0': {'wins': 2, 'avg_turns': 26.0}, 'Standard 1': {'wins': 1, 'avg_turns': 24.0}}
+
+def test_risk_less_random(options):
+    random.seed(0)
+    np.random.seed(0)
+    options['stocasticity'] = False
+    assert risk("Test Game", options) == ('Standard 0', 19)
+
+
+def test_risk_extra_start(options):
+    random.seed(0)
+    np.random.seed(0)
+    options['extra_start_deployment'] = True
+    assert risk("Test Game", options) == ('Standard 0', 15)
+
+
+def test_risk_bonus_cards(options):
+    random.seed(0)
+    np.random.seed(0)
+    options['bonus_cards'] = 'yes'
+    assert risk("Test Game", options) == ('Standard 0', 24)
+
+
+def test_risk_bonus_cards(options):
+    random.seed(0)
+    np.random.seed(0)
+    options['players'] = 3
+    assert risk("Test Game", options) == ('Standard 2', 24)

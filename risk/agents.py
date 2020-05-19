@@ -1,6 +1,6 @@
 import random
 import logging
-from typing import Tuple, List, TYPE_CHECKING
+from typing import Tuple, List, Dict, Any, TYPE_CHECKING
 
 from risk.rules import attack
 import risk.heuristic as heuristic
@@ -8,7 +8,7 @@ from risk.player import Player
 from risk.cards import Card
 
 if TYPE_CHECKING:
-    from risk.board import World
+    from risk.board import World, Territory
 
 
 def basic_check_cards(player: Player, map: 'World') -> Tuple[List[Card], int]:
@@ -36,32 +36,32 @@ def basic_check_cards(player: Player, map: 'World') -> Tuple[List[Card], int]:
 
 
 class Human(Player):
-    def __init__(self, index, name):
+    def __init__(self, index: int, name: str):
         super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
 
-    def check_cards(self, map, armies):
+    def check_cards(self, map: 'World', armies: int) -> None:
         """Check cards and hand in some if desired"""
         raise NotImplementedError()
 
-    def deploy(self, map, armies):
+    def deploy(self, map: 'World', armies: int) -> None:
         """The player deployment logic"""
-        id = None
+        id = -1  # type: int
         while not id or map.territories[id].owner not in (self, None):
             if id:
                 logging.info("You don't own that territory")
-            id = input("You get {} armies, where do you wish to deploy?".format(armies))
-            id = int(id)
+            player_input = input("You get {} armies, where do you wish to deploy?".format(armies))
+            id = int(player_input)
         map.add_armies(map.territories[id], armies)
 
-    def take_card(self, card):
+    def take_card(self, card: 'Card') -> None:
         """Add card to the players hand"""
         input("Take Card {}".format(card))
         self.cards.append(card)
 
-    def attacks(self, map, options):
+    def attacks(self, map: 'World', options: Dict[str, Any]) -> List[Tuple['Territory', 'Territory']]:
         """Declare list of attacks"""
         base, to = None, None
         while ((not base or map.territories[base].owner != self) or
@@ -75,18 +75,19 @@ class Human(Player):
                 return []
         return [(map.territories[base], map.territories[to])]
 
-    def attack_continue(self, map, territory_from, territory_to):
+    def attack_continue(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory')\
+            -> bool:
         """Ask player if they wish to continue"""
         answer = input("Do you wish to continue? yes/no")
         return True if answer.upper() in ('YES', 'Y') else False
 
-    def attack_commit(self, map, territory_from, territory_to):
+    def attack_commit(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory') -> int:
         """Ask player number of armies to commit to attack"""
         armies = input("How many armies do you wish to commit of {} avaiable?"
                        .format(territory_from.armies - 1))
         return int(armies)
 
-    def attack_move(self, map, territory_from, territory_to):
+    def attack_move(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory') -> int:
         """Ask player how many armies to move into conquest"""
         armies = input("How many armies do you wish to move in of {} avaiable?"
                        .format(territory_from.armies - 1))
@@ -94,46 +95,46 @@ class Human(Player):
 
 
 class Passive(Player):
-    def __init__(self, index, name):
+    def __init__(self, index: int, name: str):
         super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
 
-    def remove_first_match(self, type):
+    def remove_first_match(self, type: str):
         for i in range(len(self.cards)):
             card = self.cards[i]
             if card.suit == type:
                 self.cards.remove(card)
                 return card
 
-    def check_cards(self, map, armies):
+    def check_cards(self, map: 'World', armies: int):
         return basic_check_cards(self, map)
 
-    def deploy(self, map, armies):
+    def deploy(self, map: 'World', armies: int):
         """passive deployts to the first territory with the least troops"""
         own = sorted((
             territory for territory in map.territories if territory.owner == self),
             key=lambda t: t.id + len(map.territories) * t.armies)
         map.add_armies(own[0], armies)
 
-    def take_card(self, card):
+    def take_card(self, card: 'Card') -> None:
         """Add card to the players hand"""
         self.cards.append(card)
 
-    def attacks(self, map, options):
+    def attacks(self, map: 'World', options: Dict[str, Any]):
         """Passive does not attack"""
         return []
 
-    def attack_continue(self, map, territory_from, territory_to):
+    def attack_continue(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory'):
         """Ask player if they wish to continue"""
         raise NotImplementedError()
 
-    def attack_commit(self, map, territory_from, territory_to):
+    def attack_commit(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory'):
         """Ask player number of armies to commit to attack"""
         raise NotImplementedError()
 
-    def attack_move(self, map, territory_from, territory_to):
+    def attack_move(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory'):
         raise NotImplementedError()
 
 
@@ -154,7 +155,7 @@ class Standard(Player):
     def check_cards(self, map: 'World', armies: int):
         return basic_check_cards(self, map)
 
-    def deploy(self, map, armies: int):
+    def deploy(self, map: 'World', armies: int) -> None:
         """The player deployment logic"""
         own = [
             territory for territory in map.territories
@@ -163,11 +164,11 @@ class Standard(Player):
         assert len(own) > 0
         map.add_armies(own[random.randint(0, len(own)) - 1], armies)
 
-    def take_card(self, card):
+    def take_card(self, card: 'Card') -> None:
         """Add card to the players hand"""
         self.cards.append(card)
 
-    def attacks(self, map, options):
+    def attacks(self, map: 'World', options: Dict[str, Any]) -> List:
         """Declare list of attacks"""
         attacks = []
         for territory in map.territories:
@@ -177,26 +178,26 @@ class Standard(Player):
                         attacks.append((territory, neighbour))
         return attacks
 
-    def attack_continue(self, map, territory_from, territory_to):
+    def attack_continue(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory') -> bool:
         """Ask player if they wish to continue"""
         return territory_from.armies > 1
 
-    def attack_commit(self, map, territory_from, territory_to):
+    def attack_commit(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory') -> int:
         """Ask player number of armies to commit to attack"""
         return territory_from.armies - 1
 
-    def attack_move(self, map, territory_from, territory_to):
+    def attack_move(self, map: 'World', territory_from: 'Territory', territory_to: 'Territory') -> int:
         return territory_from.armies - 1
 
 
 class Aggresive(Player):
-    def __init__(self, index, name):
+    def __init__(self, index: int, name: str):
         super().__init__(index, name)
 
     def __repr__(self):
         return super().__repr__()
 
-    def remove_first_match(self, type):
+    def remove_first_match(self, type: str):
         for i in range(len(self.cards)):
             card = self.cards[i]
             if card.suit == type:
