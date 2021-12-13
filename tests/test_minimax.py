@@ -54,7 +54,7 @@ class GameState():
 
 
 def test_minimax():
-    # game_state = GameState(tree)
-    Minimax(100, 100)
-    # result = minimax.find_best(game_state)
-#     assert result == (0, (1, (0, (0, 3))))
+    game_state = GameState(tree)
+    minimax = Minimax(100, 100)
+    result = minimax.find_best(game_state)
+    assert result == (0, (1, (0, (0, 3))))

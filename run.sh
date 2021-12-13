@@ -1,7 +1,7 @@
 #!/bin/bash
 
 THISDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PRJDIR="$THISDIR/risk"
+PRJDIR="$THISDIR/src"
 ENV="venv"
 
 set -e
@@ -43,12 +43,12 @@ function build_build() {
 }
 
 function build_profile() {
-    python -m cProfile -o risk.prof "$PRJDIR/risk.py"
-    snakeviz risk.prof
+    python -m cProfile -o simulate.prof "$PRJDIR/simulation.py"
+    snakeviz simulate.prof
 }
 
 function build_citest() {
-     coverage run --branch --source="./risk" -m pytest --pyargs "./risk" "./tests"
+     coverage run --branch --source="./src" -m pytest --pyargs "./src" "./tests"
 }
 
 function build_restore() {
